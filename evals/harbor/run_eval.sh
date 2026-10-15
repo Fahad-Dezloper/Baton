@@ -47,7 +47,7 @@ for level in $LEVELS; do
     fi
     echo "[$done_n/$total] $job  ($(date +%H:%M:%S))"
     "$HARBOR" run -p "evals/harbor/tasks/clash-$lvl" -a "$agent" -m "$MODEL" \
-        --env-file .env.eval --ae CLAUDE_FORCE_OAUTH=1 \
+        --env-file .env.eval \
         -k "$K" -n 1 -o evals/harbor/jobs --job-name "$job" > "evals/harbor/jobs/$job.log" 2>&1
     rc=$?
     if [ $rc -ne 0 ]; then

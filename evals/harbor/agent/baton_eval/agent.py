@@ -10,8 +10,8 @@ plugin is loaded for those sessions:
 Run with:  PYTHONPATH=evals/harbor/agent harbor run -p <task> -a baton_eval.agent:BatonClashPlugin ...
 
 Env (host, via --env-file or --ae):
-    CLAUDE_FORCE_OAUTH=1, CLAUDE_CODE_OAUTH_TOKEN=...   use the subscription token (from `claude setup-token`)
-    BATON_DRY_RUN=1                                    no model calls; exercises sandbox + plugin only
+    CLAUDE_CODE_OAUTH_TOKEN=...   the subscription token (from `claude setup-token`); API keys are ignored
+    BATON_DRY_RUN=yes             no model calls; exercises sandbox + plugin only
     BATON_WORKER_TIMEOUT                               seconds per session (default 600)
 """
 
@@ -72,6 +72,15 @@ class _ClashAgent(ClaudeCode):
         env: Dict[str, str] = {}
         if not self._dry():
             env.update(self._resolve_auth_env())
+            # This evaluation runs on the subscription token only. Never fall back to a per-token
+            # API key even if one is present in the host environment.
+            env.pop("ANTHROPIC_API_KEY", None)
+            env.pop("ANTHROPIC_AUTH_TOKEN", None)
+            if not env.get("CLAUDE_CODE_OAUTH_TOKEN"):
+                raise RuntimeError(
+                    "CLAUDE_CODE_OAUTH_TOKEN is not set. Run `claude setup-token` and put the token "
+                    "in .env.eval (see evals/harbor/README.md)."
+                )
         env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
         env["IS_SANDBOX"] = "1"
         env["CLAUDE_CONFIG_DIR"] = (self.environment_logs_dir / "sessions").as_posix()
