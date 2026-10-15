@@ -15,6 +15,7 @@ class Config:
     enabled: bool = True
     policy: str = "warn"          # warn: inject context | ask: prompt the user | deny: block the call
     lease_seconds: int = 900
+    capture: bool = True          # derive decisions from edits automatically
 
 
 def load_config(project_dir: Optional[str]) -> Config:
@@ -28,10 +29,13 @@ def load_config(project_dir: Optional[str]) -> Config:
                 cfg.enabled = bool(raw.get("enabled", cfg.enabled))
                 cfg.policy = str(raw.get("policy", cfg.policy))
                 cfg.lease_seconds = int(raw.get("lease_seconds", cfg.lease_seconds))
+                cfg.capture = bool(raw.get("capture", cfg.capture))
         except (OSError, ValueError):
             pass
     if os.environ.get("BATON_DISABLED", "").lower() in ("1", "true", "yes"):
         cfg.enabled = False
+    if os.environ.get("BATON_CAPTURE", "").lower() in ("0", "false", "no"):
+        cfg.capture = False
     cfg.policy = os.environ.get("BATON_POLICY", cfg.policy)
     if os.environ.get("BATON_LEASE_SECONDS", "").isdigit():
         cfg.lease_seconds = int(os.environ["BATON_LEASE_SECONDS"])

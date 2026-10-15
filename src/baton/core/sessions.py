@@ -95,8 +95,12 @@ def end_session(store: Store, actor: str, now: Optional[float] = None) -> None:
     )
 
 
-def export_session_handoff(store: Store, actor: str, note: str = "", now: Optional[float] = None):
+def export_session_handoff(store: Store, actor: str, note: str = "", now: Optional[float] = None,
+                           verification: str = ""):
     begin_session(store, actor, now=now)
+    if verification:
+        store.query("MATCH (t:Task {id: $id}) SET t.verification = $v",
+                    {"id": session_task_id(actor), "v": verification[:300]})
     return handoff.export_handoff(
         store, session_task_id(actor), actor, now=now,
         handoff_id=handoff_id_for(actor), note=note[:600],

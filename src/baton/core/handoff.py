@@ -32,6 +32,8 @@ def render_packet(packet: Dict[str, object], max_chars: int = MAX_SUMMARY_CHARS)
     ]
     if packet.get("note"):
         lines.append("Last status: %s" % _clip(packet["note"], 400))
+    if task.get("verification"):  # type: ignore[union-attr]
+        lines.append("Verification: %s" % _clip(task["verification"], 300))  # type: ignore[index]
     deps = packet.get("dependencies") or []
     if deps:
         lines.append("Depends on: " + "; ".join("%s [%s]" % (d["id"], d["status"]) for d in deps))  # type: ignore[union-attr]

@@ -78,6 +78,37 @@ def post_decision(
     return get_decision(store, did)  # type: ignore[return-value]
 
 
+def upsert_decision(
+    store: Store,
+    actor_id: str,
+    decision_id: str,
+    text: str,
+    artifacts: Iterable[str] = (),
+    kind: str = "note",
+    now: Optional[float] = None,
+) -> dict:
+    """Create or update a decision with a caller-chosen stable id (used for derived decisions)."""
+    if kind not in DECISION_KINDS:
+        raise ValueError("unknown decision kind: %s" % kind)
+    t = _now(now)
+    ensure_actor(store, actor_id, now=t)
+    store.query(
+        "MERGE (d:Decision {id: $id}) "
+        "ON CREATE SET d.status = 'open', d.author = $actor, d.created_at = $now "
+        "SET d.text = $text, d.kind = $kind, d.updated_at = $now, d.auto = true "
+        "WITH d MATCH (a:Actor {id: $actor}) MERGE (a)-[:DECIDED]->(d)",
+        {"id": decision_id, "actor": actor_id, "text": text, "kind": kind, "now": t},
+    )
+    paths = normalize_paths(artifacts)
+    if paths:
+        store.query(
+            "MATCH (d:Decision {id: $id}) UNWIND $paths AS p MERGE (a:Artifact {path: p})"
+            " MERGE (d)-[:ABOUT]->(a)",
+            {"id": decision_id, "paths": paths},
+        )
+    return get_decision(store, decision_id)  # type: ignore[return-value]
+
+
 def supersede_decision(
     store: Store,
     actor_id: str,

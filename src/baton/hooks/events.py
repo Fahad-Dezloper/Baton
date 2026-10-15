@@ -12,6 +12,7 @@ import re
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
+from baton.capture import derive, transcript
 from baton.core import decisions, sessions
 from baton.core.paths import normalize_path
 from baton.graph.client import Store
@@ -160,6 +161,9 @@ def on_post_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Option
     actor = actor_from(payload)
     for p in paths:
         sessions.touch(store, actor, p, now=now, lease_seconds=cfg.lease_seconds)
+    tool = payload.get("tool_name")
+    if cfg.capture and tool in EDIT_TOOLS and paths:
+        _capture_edit(store, actor, payload, paths[0], now)
     if payload.get("tool_name") == "Bash" and len(paths) >= 2:
         decisions.post_decision(
             store, actor, "renamed/moved %s -> %s" % (paths[0], paths[1]),
@@ -168,10 +172,39 @@ def on_post_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Option
     return None
 
 
+def _capture_edit(store: Store, actor: str, payload: Dict[str, Any], path: str, now: Optional[float]) -> None:
+    """Derive decisions (interface/config/storage changes) from the edit's own payload."""
+    tool = str(payload.get("tool_name"))
+    inp = payload.get("tool_input") or {}
+    resp = payload.get("tool_response") or {}
+    if not isinstance(resp, dict) or not isinstance(inp, dict):
+        return
+    original = resp.get("originalFile")
+    old = original if isinstance(original, str) else None
+    created = resp.get("type") == "create"
+    if not created and old is None:
+        return  # cannot diff without the previous content
+    new = derive.new_text_for_edit(tool, inp, resp, old)
+    for d in derive.derive_decisions(path, None if created else old, new):
+        decisions.upsert_decision(
+            store, actor, derive.decision_id(actor, path, d["kind"]), d["text"],
+            artifacts=[path], kind=d["kind"], now=now,
+        )
+
+
+def _verification(payload: Dict[str, Any]) -> str:
+    run = transcript.last_test_run(transcript.read_records(payload.get("transcript_path")))
+    if not run:
+        return ""
+    tail = ": %s" % run["summary"] if run["summary"] else ""
+    return "`%s` -> %s%s" % (run["command"], run["status"], tail)
+
+
 def on_stop(store: Store, payload: Dict[str, Any], cfg: Config, now: Optional[float] = None):
     actor = actor_from(payload)
     note = " ".join(str(payload.get("last_assistant_message", "")).split())
-    sessions.export_session_handoff(store, actor, note=note, now=now)
+    sessions.export_session_handoff(store, actor, note=note, now=now,
+                                    verification=_verification(payload) if cfg.capture else "")
     return None
 
 
