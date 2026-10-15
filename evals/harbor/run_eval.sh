@@ -16,6 +16,7 @@ K="${1:-5}"
 LEVELS="${2:-L1 L2 L3 L4 L5}"
 ARMS="${3:-baseline plugin}"
 MODEL="${BATON_EVAL_MODEL:-anthropic/claude-haiku-5-5}"
+PREFIX="${BATON_EVAL_PREFIX:-eval}"   # use a new prefix per round, e.g. eval2
 HARBOR=".venv/bin/harbor"
 
 [ -x "$HARBOR" ]            || { echo "missing $HARBOR (run: .venv/bin/pip install -e . harbor)"; exit 1; }
@@ -39,7 +40,7 @@ for level in $LEVELS; do
       plugin)   agent="baton_eval.agent:BatonClashPlugin" ;;
       *) echo "unknown arm: $arm"; exit 1 ;;
     esac
-    job="eval-${arm}-${lvl}-k${K}"
+    job="${PREFIX}-${arm}-${lvl}-k${K}"
     done_n=$((done_n+1))
     if [ -f "evals/harbor/jobs/$job/result.json" ]; then
       echo "[$done_n/$total] skip $job (already finished)"
@@ -60,4 +61,4 @@ done
 
 echo "finished: $(date)   failed jobs: $failed"
 echo
-.venv/bin/python evals/harbor/summarize.py "evals/harbor/jobs/eval-*-k${K}"
+.venv/bin/python evals/harbor/summarize.py "evals/harbor/jobs/${PREFIX}-*-k${K}"

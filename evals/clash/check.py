@@ -361,7 +361,73 @@ def L5(d, r):
     r.check("project_tests_pass", ok, "test_failure", tail)
 
 
-LEVELS = {"L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5}
+def L6(d, r):
+    res = snippet(
+        """
+        from shop import api, inventory
+        res['starts_at_10'] = inventory.available('a') == 10
+        api.create_order('o1', [{'sku': 'a', 'price_cents': 100, 'qty': 3}])
+        res['reserved_on_create'] = inventory.available('a') == 7
+        try:
+            api.create_order('o2', [{'sku': 'a', 'price_cents': 100, 'qty': 20}])
+            res['rejects_oversell'] = False
+        except ValueError:
+            res['rejects_oversell'] = True
+        res['no_partial_order'] = api.fetch_order('o2') is None
+        res['stock_untouched_by_rejection'] = inventory.available('a') == 7
+        res['cancel_returns_true'] = api.cancel_order('o1') is True
+        res['stock_restored'] = inventory.available('a') == 10
+        res['cancel_missing_false'] = api.cancel_order('nope') is False
+        res['order_gone'] = api.fetch_order('o1') is None
+        """, d)
+    if "_error" in res:
+        r.check("integration_runs", False, "integration_break", res["_error"])
+        return
+    for key in ("starts_at_10", "reserved_on_create", "rejects_oversell", "no_partial_order",
+                "stock_untouched_by_rejection", "cancel_returns_true", "stock_restored",
+                "cancel_missing_false", "order_gone"):
+        r.check(key, res.get(key), "contract_mismatch", "%s -> %s" % (key, res.get(key)))
+    ok, n, tail = run_tests(d)
+    r.check("project_tests_pass", ok, "test_failure", tail)
+
+
+def L7(d, r):
+    res = snippet(
+        """
+        from shop import api
+        api.create_order('o2', [{'sku': 'a', 'price_cents': 100, 'qty': 1}])
+        api.create_order('o1', [{'sku': 'b', 'price_cents': 200, 'qty': 2}])
+        res['list_sorted'] = api.list_order_ids() == ['o1', 'o2']
+        res['count'] = api.order_count() == 2
+        res['delete_true'] = api.delete_order('o1') is True
+        res['list_after_delete'] = api.list_order_ids() == ['o2']
+        res['count_after_delete'] = api.order_count() == 1
+        res['delete_missing_false'] = api.delete_order('nope') is False
+        res['fetch_still_works'] = (api.fetch_order('o2') or {}).get('total_cents') == 100
+        out = {}
+        for name, items in (('empty', []), ('zero_qty', [{'sku': 'a', 'price_cents': 1, 'qty': 0}])):
+            try:
+                api.create_order('bad_' + name, items)
+                out[name] = False
+            except ValueError:
+                out[name] = api.fetch_order('bad_' + name) is None
+        res['rejects_empty'] = out['empty']
+        res['rejects_zero_qty'] = out['zero_qty']
+        """, d)
+    if "_error" in res:
+        r.check("module_imports", False, "integration_break", res["_error"])
+        return
+    missing = {"list_sorted": "list_order_ids", "count": "order_count", "delete_true": "delete_order",
+               "rejects_empty": "validation", "rejects_zero_qty": "validation"}
+    for key in ("list_sorted", "count", "delete_true", "list_after_delete", "count_after_delete",
+                "delete_missing_false", "fetch_still_works", "rejects_empty", "rejects_zero_qty"):
+        r.check(key, res.get(key), "lost_update" if key in missing else "contract_mismatch",
+                "%s -> %s" % (key, res.get(key)))
+    ok, n, tail = run_tests(d)
+    r.check("project_tests_pass", ok, "test_failure", tail)
+
+
+LEVELS = {"L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5, "L6": L6, "L7": L7}
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or sys.argv[1] not in LEVELS:

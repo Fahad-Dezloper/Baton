@@ -43,6 +43,23 @@
         "E": "Security requirement for rate limiting on shop.api.create_order (5 calls per client_id per rolling minute, extras rejected): the limiter state must persist across process restarts.",
         "F": "Performance requirement for rate limiting on shop.api.create_order (5 calls per client_id per rolling minute, extras rejected): no file or disk I/O on the request path."
       }
+    },
+    "L6": {
+      "name": "Held-out: stock reservation across modules (3 sessions)",
+      "agents": {
+        "A": "Add shop/inventory.py. It keeps stock per sku; every sku starts with 10 units. Expose available(sku) -> int, reserve(sku, qty) which raises ValueError if qty is more than is available, and release(sku, qty) which returns units to stock.",
+        "B": "Make shop.api.create_order refuse to create an order when any line item asks for more units than are available (raise ValueError and create nothing). When an order is created, reserve its items from stock. Use the project's stock module.",
+        "C": "Add shop.api.cancel_order(order_id): it removes the order, returns its reserved units to stock and returns True; it returns False if the order does not exist. Use the project's stock module."
+      }
+    },
+    "L7": {
+      "name": "Held-out: four additions to one file (4 sessions)",
+      "agents": {
+        "A": "Add shop.api.list_order_ids() returning a sorted list of all stored order ids. Add whatever storage helper you need.",
+        "B": "Add shop.api.delete_order(order_id): it removes the order and returns True, or returns False if the order does not exist.",
+        "C": "Make shop.api.create_order raise ValueError, and create nothing, when items is empty or any item has qty <= 0.",
+        "D": "Add shop.api.order_count() returning the number of stored orders."
+      }
     }
   }
 }
