@@ -15,3 +15,8 @@ evals/clash/runs/
 # probe artifacts from the hook spike
 spikes/hooktest/hook-log*.jsonl
 spikes/hooktest/*.txt
+
+# credentials for evaluation runs must never be committed
+.env.*
+*.env
+evals/harbor/jobs/
