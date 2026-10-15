@@ -16,7 +16,7 @@ REL_TYPES = (
 )
 
 TASK_STATUSES = ("open", "claimed", "done", "released")
-DECISION_STATUSES = ("open", "superseded", "retracted")
+DECISION_STATUSES = ("open", "superseded", "retracted", "tainted")
 
 # One statement per index. Run each, ignoring "already indexed" errors.
 INDEX_STATEMENTS = (
