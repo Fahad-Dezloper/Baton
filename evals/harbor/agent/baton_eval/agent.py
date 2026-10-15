@@ -76,6 +76,9 @@ class _ClashAgent(ClaudeCode):
         env["IS_SANDBOX"] = "1"
         env["CLAUDE_CONFIG_DIR"] = (self.environment_logs_dir / "sessions").as_posix()
         env["BATON_FALKORDB_HOST"] = "127.0.0.1"
+        if self.ARM == "plugin":
+            # Evidence: every hook invocation and the context it injected, per trial.
+            env["BATON_DEBUG_LOG"] = (self.environment_logs_dir / "baton-hooks.log").as_posix()
         return env
 
     def _model(self) -> str:

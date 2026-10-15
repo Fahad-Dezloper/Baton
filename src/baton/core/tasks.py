@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import time
 from dataclasses import dataclass, field
@@ -15,8 +16,15 @@ LEASE_SECONDS_DEFAULT = 300
 
 
 def goal_key(goal: str) -> str:
-    """Normalized goal text used to spot duplicate tickets."""
-    return re.sub(r"[^a-z0-9]+", " ", goal.lower()).strip()
+    """Normalized goal text used to spot duplicate tickets.
+
+    Computed from the FULL text: long texts are hashed so two requests that merely share a long
+    preamble are not mistaken for duplicates.
+    """
+    norm = re.sub(r"[^a-z0-9]+", " ", goal.lower()).strip()
+    if len(norm) <= 200:
+        return norm
+    return "h:" + hashlib.sha1(norm.encode()).hexdigest()
 
 
 def _now(now: Optional[float]) -> float:

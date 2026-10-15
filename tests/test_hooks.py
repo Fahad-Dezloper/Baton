@@ -129,6 +129,15 @@ class HandlerTests(GraphCase):
         self.assertIn("same goal", out["hookSpecificOutput"]["additionalContext"])
         self.assertIsNone(self.run_ev("prompt", {"session_id": a, "prompt": "something else entirely"}))
 
+    def test_shared_preamble_is_not_a_duplicate(self):
+        pre = "You are an engineer working on the project. Follow the house rules carefully. " * 6
+        a, b, c = ("A-" + uuid.uuid4().hex[:6], "B-" + uuid.uuid4().hex[:6], "C-" + uuid.uuid4().hex[:6])
+        self.run_ev("prompt", {"session_id": a, "prompt": pre + "TICKET: make storage durable"})
+        out = self.run_ev("prompt", {"session_id": b, "prompt": pre + "TICKET: add a csv export"})
+        self.assertIsNone(out)  # different request behind the same boilerplate
+        dup = self.run_ev("prompt", {"session_id": c, "prompt": pre + "TICKET: make storage durable"})
+        self.assertIn("same goal", dup["hookSpecificOutput"]["additionalContext"])
+
     def test_rename_via_bash_is_recorded_and_conflicts(self):
         a, b = "A-" + uuid.uuid4().hex[:6], "B-" + uuid.uuid4().hex[:6]
         self.run_ev("post-tool", bash(a, "git mv shop/db.py shop/store.py"))

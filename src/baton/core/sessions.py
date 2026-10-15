@@ -62,20 +62,21 @@ def touch(store: Store, actor: str, path: str, now: Optional[float] = None,
 
 def set_goal(store: Store, actor: str, prompt: str, now: Optional[float] = None) -> Optional[str]:
     """First prompt becomes the session's goal. Returns the goal if it was set now."""
-    goal = " ".join(prompt.split())[:200]
-    if not goal:
+    full = " ".join(prompt.split())
+    if not full:
         return None
+    goal = full[:200]
     begin_session(store, actor, now=now)
     rows = store.rows(
         "MATCH (t:Task {id: $id}) WHERE t.auto_goal = true "
         "SET t.goal = $goal, t.goal_key = $gk, t.auto_goal = false RETURN t.goal",
-        {"id": session_task_id(actor), "goal": goal, "gk": goal_key(goal)},
+        {"id": session_task_id(actor), "goal": goal, "gk": goal_key(full)},
     )
-    return goal if rows else None
+    return full if rows else None
 
 
 def duplicate_sessions(store: Store, actor: str, goal: str, now: Optional[float] = None) -> List[dict]:
-    """Other live sessions whose goal matches this one."""
+    """Other live sessions whose request matches this one (`goal` is the full prompt text)."""
     t = _now(now)
     return [
         r[0]
