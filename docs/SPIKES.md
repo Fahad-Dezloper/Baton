@@ -97,3 +97,36 @@ NOT verified yet
 - Isolation canary: a fact in one workspace graph is invisible from another; hostile workspace
   names cannot escape the `baton_` prefix.
 - Not covered yet: behaviour under network faults or replicas; very large graphs.
+
+## Phase 3 results (host integration)
+Identity finding (probe `spikes/identity/`): in a real session, both the hooks and the stdio MCP
+server see `CLAUDE_CODE_SESSION_ID`, equal to the `session_id` hooks receive, and both see
+`CLAUDE_PROJECT_DIR`. So one actor id and one workspace id are shared by hooks and tools with no
+hand-off file. (`CLAUDE_PID` points at the *outer* process, so it is not used.)
+
+Design that follows
+- Every session (and subagent: `session/agent_id`) owns an implicit task whose lease is renewed on
+  each edit and whose TOUCHES edges list the files changed. Other sessions see it as a live lease.
+- Hooks: SessionStart (register + briefing), UserPromptSubmit (goal + duplicate check), PreToolUse
+  (conflict check), PostToolUse (record edit / rename), Stop (idempotent handoff), SessionEnd (release).
+- Policy default `warn` (injected context; works headless). `ask` and `deny` are opt-in via
+  `.baton.json` or `BATON_POLICY`. `BATON_DISABLED=1` turns everything off. Every failure exits 0.
+
+Evidence
+- 55 tests green, run twice. Handlers are exercised against live FalkorDB; the CLI is exercised as a
+  subprocess, including dead-store (fail open) and disabled modes.
+- Real host run, two overlapping sessions, plugin loaded via `--plugin-dir`: B's start was briefed
+  that A was working on `app.py`; B's pre-edit received "Possible collision on app.py ... last
+  edit 1s ago"; B kept A's function and appended its own, citing the warning.
+- Hook latency in the real host: about 60-130 ms per event.
+
+Caveats (important)
+- This is one demonstration, not a measurement. The host also has its own guard (a write to an
+  existing file needs a prior read), so the run does not isolate baton's effect. Phase 5 does.
+- MCP tools need user permission in a host; hooks do not. In the run, B could not record its change
+  via the tool because the tool was not pre-approved. Automatic capture (Phase 4) should not depend
+  on the model calling tools.
+- A first attempt at the overlap test failed to overlap: the host refused a standalone `sleep`.
+  Overlap was produced with real sustained work instead.
+- Not verified: `ask` interactively, behaviour with compaction/resume, large repos, plugin install
+  via a marketplace (only `--plugin-dir` tested).

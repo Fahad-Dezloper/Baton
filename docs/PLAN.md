@@ -46,14 +46,15 @@ Exit check: a host session can call every tool end to end.
 created, claimed, decided, checked conflicts and exported a handoff through the tools.
 
 ## Phase 3: Host integration (hooks + plugin)
-- [ ] 3.1 Session start: register caller, inject a small handoff summary (size-capped, pointer to the rest)
-- [ ] 3.2 Pre-edit: conflict check; default to warn/ask, never hard-block, fail open
-- [ ] 3.3 Post-edit and stop: record touched artifacts and decisions
-- [ ] 3.4 Handoff export on stop (not on session end; the budget there is small)
-- [ ] 3.5 Plugin manifest bundling hooks + server; one-command install
-- [ ] 3.6 Settings: warn vs block, timeouts, opt-out
+- [x] 3.1 Session start: register caller, inject a small handoff summary (size-capped, pointer to the rest)
+- [x] 3.2 Pre-edit: conflict check; default to warn/ask, never hard-block, fail open
+- [x] 3.3 Post-edit and stop: record touched artifacts and decisions
+- [x] 3.4 Handoff export on stop (not on session end; the budget there is small)
+- [x] 3.5 Plugin manifest bundling hooks + server; one-command install
+- [x] 3.6 Settings: warn vs block, timeouts, opt-out
 
 Exit check: two real sessions on one repo; a conflict is surfaced with no manual command.
+**Done**: see SPIKES.md, Phase 3 results. Effect on outcomes is measured in Phase 5, not claimed here.
 
 ## Phase 4: Automatic capture
 - [ ] 4.1 Defensive transcript reader (typed content blocks, async-written file)
