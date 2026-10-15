@@ -190,12 +190,13 @@ class CliTests(unittest.TestCase):
         proj = tempfile.mkdtemp(prefix="baton_proj_")
         ws = default_workspace(proj)
         env = {"CLAUDE_PROJECT_DIR": proj}
+        one, two = "S-one-" + uuid.uuid4().hex[:6], "S-two-" + uuid.uuid4().hex[:6]
         try:
             fp = os.path.join(proj, "app.py")
-            r1 = self.run_cli("post-tool", {"session_id": "S-one", "cwd": proj, "tool_name": "Write",
+            r1 = self.run_cli("post-tool", {"session_id": one, "cwd": proj, "tool_name": "Write",
                                              "tool_input": {"file_path": fp}}, env)
             self.assertEqual((r1.returncode, r1.stdout), (0, ""))
-            r2 = self.run_cli("pre-tool", {"session_id": "S-two", "cwd": proj, "tool_name": "Write",
+            r2 = self.run_cli("pre-tool", {"session_id": two, "cwd": proj, "tool_name": "Write",
                                             "tool_input": {"file_path": fp}}, env)
             self.assertEqual(r2.returncode, 0)
             out = json.loads(r2.stdout)

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Launcher for baton hooks. Finds a Python that can import baton, then runs the hook CLI.
+# Fails open: if baton cannot be found, exit 0 so the host session is never affected.
+set -u
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+pick_python() {
+  local c
+  for c in "${BATON_PYTHON:-}" "$ROOT/../.venv/bin/python" "$ROOT/.venv/bin/python" python3; do
+    [ -n "$c" ] && command -v "$c" >/dev/null 2>&1 && "$c" -c 'import baton' >/dev/null 2>&1 && { echo "$c"; return 0; }
+  done
+  # running from a source checkout without an install
+  if [ -d "$ROOT/../src/baton" ]; then
+    for c in "$ROOT/../.venv/bin/python" python3; do
+      command -v "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }
+    done
+  fi
+  return 1
+}
+
+PY="$(pick_python)" || exit 0
+[ -d "$ROOT/../src/baton" ] && export PYTHONPATH="$ROOT/../src${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PY" -B -m baton.hooks.cli "$@"

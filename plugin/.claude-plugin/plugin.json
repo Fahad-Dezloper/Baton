@@ -1,0 +1,5 @@
+{
+  "name": "baton",
+  "version": "0.1.0",
+  "description": "Keeps parallel sessions from colliding: shared task, decision and handoff graph backed by FalkorDB."
+}
