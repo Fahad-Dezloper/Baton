@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": "fresh open task",
+    "workers": 16,
+    "rounds": 100,
+    "winners_distribution": {
+      "1": 100
+    },
+    "violations": 0,
+    "violation_samples": [],
+    "claim_latency_ms": {
+      "p50": 0.67,
+      "p95": 1.29,
+      "max": 2.37
+    }
+  },
+  {
+    "scenario": "expired lease takeover",
+    "workers": 16,
+    "rounds": 100,
+    "winners_distribution": {
+      "1": 100
+    },
+    "violations": 0,
+    "violation_samples": [],
+    "claim_latency_ms": {
+      "p50": 0.63,
+      "p95": 1.02,
+      "max": 1.31
+    }
+  },
+  {
+    "scenario": "live lease (expect 0 winners)",
+    "winners": 0,
+    "final": [
+      "",
+      0,
+      "claimed"
+    ]
+  },
+  {
+    "scenario": "NON-atomic control (read then write)",
+    "workers": 16,
+    "rounds": 100,
+    "winners_distribution": {
+      "7": 10,
+      "9": 17,
+      "12": 9,
+      "13": 7,
+      "10": 17,
+      "6": 9,
+      "8": 6,
+      "15": 2,
+      "11": 11,
+      "5": 5,
+      "4": 1,
+      "14": 3,
+      "16": 3
+    },
+    "rounds_with_double_claim": 100
+  }
+]

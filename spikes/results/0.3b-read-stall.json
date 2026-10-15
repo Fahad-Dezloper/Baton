@@ -1,0 +1,50 @@
+[
+  {
+    "write_ms": 447.9,
+    "reads": 1209,
+    "p50_ms": 0.16,
+    "p99_ms": 0.28,
+    "max_ms": 230.3,
+    "slow_reads_over_20ms": [
+      [
+        217.5,
+        230.3
+      ]
+    ],
+    "slow_read_positions_pct_of_write": [
+      49
+    ]
+  },
+  {
+    "write_ms": 792.3,
+    "reads": 949,
+    "p50_ms": 0.16,
+    "p99_ms": 0.33,
+    "max_ms": 631.4,
+    "slow_reads_over_20ms": [
+      [
+        160.8,
+        631.4
+      ]
+    ],
+    "slow_read_positions_pct_of_write": [
+      20
+    ]
+  },
+  {
+    "write_ms": 721.1,
+    "reads": 822,
+    "p50_ms": 0.15,
+    "p99_ms": 0.42,
+    "max_ms": 575.7,
+    "slow_reads_over_20ms": [
+      [
+        145.4,
+        575.7
+      ]
+    ],
+    "slow_read_positions_pct_of_write": [
+      20
+    ]
+  }
+]

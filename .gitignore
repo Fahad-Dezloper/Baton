@@ -11,3 +11,7 @@ dist/
 
 # eval working copies are generated, results are tracked
 evals/clash/runs/
+
+# probe artifacts from the hook spike
+spikes/hooktest/hook-log*.jsonl
+spikes/hooktest/*.txt

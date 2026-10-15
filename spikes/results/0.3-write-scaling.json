@@ -1,0 +1,21 @@
+{
+  "threads": 8,
+  "writes_per_thread": 6,
+  "nodes_per_write": 20000,
+  "thread_count_config": [
+    "THREAD_COUNT",
+    4
+  ],
+  "single_thread_seconds": 0.192,
+  "A_one_graph_seconds": 1.318,
+  "A_writes_per_sec": 36.4,
+  "B_separate_graphs_seconds": 0.634,
+  "B_writes_per_sec": 75.7,
+  "single_thread_writes_per_sec": 31.2,
+  "B_over_A_speedup": 2.08,
+  "C_long_write_ms": 1250.7,
+  "C_read_baseline_ms_p50": 0.5,
+  "C_reads_during_write_count": 1222,
+  "C_read_during_write_ms_p50": 0.43,
+  "C_read_during_write_ms_max": 588.57
+}

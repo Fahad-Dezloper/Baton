@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" session_start", "timeout": 20 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit|Bash|Task|Agent", "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" pre_tool", "timeout": 20 } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write|Edit", "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" post_tool", "timeout": 20 } ] }
+    ],
+    "SubagentStart": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" subagent_start", "timeout": 20 } ] }
+    ],
+    "SubagentStop": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" subagent_stop", "timeout": 20 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" stop", "timeout": 20 } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/hook.py\" session_end", "timeout": 20 } ] }
+    ]
+  }
+}
