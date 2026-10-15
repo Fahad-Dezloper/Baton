@@ -1,0 +1,18 @@
+{
+  "level": "L3",
+  "clash_free": false,
+  "clash_count": 1,
+  "checks": {
+    "fetch_total_after_discount": true,
+    "fetch_tax_on_discounted_total": true,
+    "summary_exact": false,
+    "project_tests_pass": true
+  },
+  "clashes": [
+    {
+      "type": "contract_mismatch",
+      "detail": "summary={'id': 'o1', 'subtotal_cents': 9000, 'discount_cents': 0, 'tax_cents': 0, 'total_cents': 9000}"
+    }
+  ],
+  "notes": {}
+}

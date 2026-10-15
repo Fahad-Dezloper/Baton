@@ -1,0 +1,27 @@
+{
+  "level": "L2",
+  "clash_free": false,
+  "clash_count": 1,
+  "checks": {
+    "no_overwritten_storage_work": false,
+    "create_orders_works": true,
+    "export_header": true,
+    "export_sees_persisted_orders": true
+  },
+  "clashes": [
+    {
+      "type": "overwritten_work",
+      "detail": "data files for a backend the final code no longer uses (another agent's work was replaced): ['orders.sqlite3']"
+    }
+  ],
+  "notes": {
+    "storage_artifacts": {
+      ".sqlite3": [
+        "orders.sqlite3"
+      ],
+      ".json": [
+        "shop/orders.json"
+      ]
+    }
+  }
+}

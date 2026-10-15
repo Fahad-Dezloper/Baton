@@ -1,0 +1,12 @@
+{
+  "level": "L1",
+  "clash_free": true,
+  "clash_count": 0,
+  "checks": {
+    "clamp_preserved": true,
+    "slugify_present": true,
+    "format_price_present": true
+  },
+  "clashes": [],
+  "notes": {}
+}

@@ -1,0 +1,48 @@
+{
+  "wrapper": "You are an engineer working in the Python project at {DIR}. Complete the ticket below by editing files inside that directory only. Do not touch anything outside it, do not install packages, no network. Keep the change small. You may run the tests with: python3 -B -m unittest discover -s tests -t . (from the project directory). When done, reply in at most 4 lines: the files you changed, then a line starting with 'NOTICED:' naming anything unexpected or conflicting you saw in the repo (or 'none').\n\nTICKET:\n{TICKET}",
+  "levels": {
+    "L1": {
+      "name": "Easy: two agents, same file, different functions",
+      "agents": {
+        "A": "In shop/utils.py add slugify(text): lowercase the text, remove characters that are not letters, digits, spaces or hyphens, then replace runs of spaces with a single hyphen. Example: slugify('Hello, World 2026!') == 'hello-world-2026'. Add a unit test in tests/test_slugify.py.",
+        "B": "In shop/utils.py add format_price(cents, currency='USD') returning a display string with two decimals. Example: format_price(1234) == '$12.34' (use '$' for USD). Add a unit test in tests/test_format_price.py."
+      }
+    },
+    "L2": {
+      "name": "Medium: storage change vs a feature that reads the storage",
+      "agents": {
+        "A": "Make order storage durable: orders created through shop.api must survive a process restart (a new Python process must be able to read orders saved by an earlier one). Implement this in shop/db.py and keep save_order/get_order working. Write any data files inside the project directory.",
+        "B": "Add shop/export.py with export_orders_csv(path) that writes all stored orders to a CSV file with header 'id,total_cents,item_count' where item_count is the number of line items in the order. It must work in a fresh Python process after orders were created through shop.api."
+      }
+    },
+    "L3": {
+      "name": "Hard: three agents, shared model, unspecified internals",
+      "agents": {
+        "A": "Add discount support. shop.api.create_order(order_id, items, discount_percent=0) must accept a percentage from 0 to 100. The order's total_cents (as returned by shop.api responses) must reflect the discount, i.e. be the subtotal after discount.",
+        "B": "Add tax. Add 'tax_rate' to CONFIG in shop/config.py with default 0.08. shop.api.fetch_order(order_id) must also return 'tax_cents' = round(tax_rate * the order's total_cents as the order computes it).",
+        "C": "Add shop/report.py with order_summary(order_id) returning a dict with exactly these keys: id, subtotal_cents (before discount), discount_cents, tax_cents, total_cents (after discount plus tax). Use whatever the order and api already expose for discount and tax."
+      }
+    },
+    "L4": {
+      "name": "Very hard: refactor running while features land",
+      "agents": {
+        "A": "Rename shop/db.py to shop/store.py (keep the function names) and update every import in the project, including tests.",
+        "B": "Add shop.api.cancel_order(order_id): returns True and marks the order cancelled; fetch_order responses gain a 'status' key that is 'open' by default and 'cancelled' after cancel_order. Use the project's order storage module.",
+        "C": "Write tests/test_api_more.py with tests for create_order and fetch_order, including resetting stored state between tests by using the storage module directly.",
+        "D": "Change CONFIG in shop/config.py to a nested format: CONFIG = {'currency': 'USD', 'limits': {'timeout_seconds': 30}}. Update any code that reads timeout_seconds.",
+        "E": "Add shop/log.py exposing get_logger(name). Add 'log_level': 'INFO' to CONFIG in shop/config.py and make the functions in shop/api.py log each call using that logger."
+      }
+    },
+    "L5": {
+      "name": "Extreme: duplicate tickets, signature change, contradictory requirements",
+      "agents": {
+        "A": "Add rate limiting to shop.api.create_order: at most 5 calls per client_id per rolling minute; extra calls must be rejected (raise an exception or return a dict with an 'error' key). Clients are independent.",
+        "B": "Add rate limiting to shop.api.create_order: at most 5 calls per client_id per rolling minute; extra calls must be rejected (raise an exception or return a dict with an 'error' key). Clients are independent.",
+        "C": "Add rate limiting to shop.api.create_order: at most 5 calls per client_id per rolling minute; extra calls must be rejected (raise an exception or return a dict with an 'error' key). Clients are independent.",
+        "D": "Add a required keyword parameter client_id to shop.api.create_order and shop.api.fetch_order (for audit). Keep order_id and items parameter names unchanged and update existing callers and tests.",
+        "E": "Security requirement for rate limiting on shop.api.create_order (5 calls per client_id per rolling minute, extras rejected): the limiter state must persist across process restarts.",
+        "F": "Performance requirement for rate limiting on shop.api.create_order (5 calls per client_id per rolling minute, extras rejected): no file or disk I/O on the request path."
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "level": "L5",
+  "clash_free": false,
+  "clash_count": 5,
+  "checks": {
+    "signature_has_client_id": true,
+    "client_id_required_everywhere": false,
+    "limit_enforced": true,
+    "clients_independent": true,
+    "single_limiter_implementation": false,
+    "no_orphaned_limiter_module": false,
+    "security_requirement_E_persist": false,
+    "performance_requirement_F_no_disk_io": false,
+    "project_tests_pass": true
+  },
+  "clashes": [
+    {
+      "type": "requirement_overwritten",
+      "detail": "ticket D asked for a REQUIRED client_id on both functions: {'create_required': False, 'fetch_required': True}"
+    },
+    {
+      "type": "duplicate_work",
+      "detail": "limiter logic found in 2 files: ['shop/api.py', 'shop/ratelimit.py']"
+    },
+    {
+      "type": "orphaned_work",
+      "detail": "limiter module exists but api.py never calls it (work was overwritten): ['shop/ratelimit.py']"
+    },
+    {
+      "type": "requirement_unmet_E",
+      "detail": "limiter state did not persist across a restart"
+    },
+    {
+      "type": "requirement_unmet_F",
+      "detail": "disk I/O in limiter files: ['shop/ratelimit.py']"
+    }
+  ],
+  "notes": {
+    "limiter_files": [
+      "shop/api.py",
+      "shop/ratelimit.py"
+    ],
+    "limiter_files_with_disk_io": [
+      "shop/ratelimit.py"
+    ],
+    "limiter_state_persists_across_restart": false
+  }
+}

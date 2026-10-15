@@ -1,0 +1,42 @@
+{
+  "level": "L4",
+  "clash_free": false,
+  "clash_count": 5,
+  "checks": {
+    "api_imports": false,
+    "rename_done_cleanly": true,
+    "no_stale_db_imports": false,
+    "cancel_works": false,
+    "config_nested": true,
+    "config_log_level_kept": false,
+    "no_flat_timeout_readers": true,
+    "logger_present": true,
+    "project_tests_pass": false
+  },
+  "clashes": [
+    {
+      "type": "broken_imports",
+      "detail": "KeyError('log_level')"
+    },
+    {
+      "type": "stale_reference",
+      "detail": "1 files still import shop.db"
+    },
+    {
+      "type": "feature_broken",
+      "detail": "{'_error': \"KeyError('log_level')\"}"
+    },
+    {
+      "type": "lost_update",
+      "detail": "log_level missing from CONFIG: {'nested': True, 'flat_gone': True, 'log_level': False}"
+    },
+    {
+      "type": "test_failure",
+      "detail": "ht30s06l69fkcdqzf176w0000gn/T/clash_8j26hw9b/p/shop/log.py\", line 8, in get_logger\n    logger.setLevel(CONFIG[\"log_level\"])\n                    ~~~~~~^^^^^^^^^^^^^\nKeyError: 'log_level'\n\n\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nFAILED (errors=2)\n"
+    }
+  ],
+  "notes": {
+    "stale_db_import_files": 1,
+    "tests_ran": 2
+  }
+}
