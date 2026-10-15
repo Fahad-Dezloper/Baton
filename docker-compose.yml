@@ -1,7 +1,7 @@
 services:
   falkordb:
-    # Pin a tested tag in Phase 0.1 (override with FALKORDB_IMAGE).
-    image: ${FALKORDB_IMAGE:-falkordb/falkordb:latest}
+    # Pinned in Phase 0.1 (override with FALKORDB_IMAGE). 6.0.2 is untested; see docs/SPIKES.md.
+    image: ${FALKORDB_IMAGE:-falkordb/falkordb:v4.22.1}
     ports:
       - "6379:6379"   # Redis protocol
       - "3000:3000"   # FalkorDB Browser
