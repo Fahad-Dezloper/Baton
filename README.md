@@ -9,7 +9,7 @@ ticket. And when a session ends, the next one starts from zero.
 baton keeps a small graph of **who is working on what, what has been decided, and what depends on
 what**, so sessions can check before they act and pick up where the last one stopped.
 
-> Status: core library done (Phase 1). Server and host integration are next. See [docs/PLAN.md](docs/PLAN.md) for the phased build and
+> Status: core library and MCP server done (Phases 1-2). Host integration (hooks) is next. See [docs/PLAN.md](docs/PLAN.md) for the phased build and
 > [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the draft design.
 
 ## Layout
@@ -31,8 +31,17 @@ docker compose up -d      # server on :6379, browser UI on :3000
 results are recorded in `evals/clash/results/baseline/BASELINE.md`. The same levels are re-run with
 baton enabled in Phase 5.
 
+## Try the MCP server
+```sh
+docker compose up -d
+pip install -e .
+BATON_WORKSPACE=demo baton-mcp      # stdio server
+```
+Tools: create_task, get_ready_tasks, claim_task, renew_lease, complete_task, release_task,
+post_decision, check_conflicts, add_finding, why, retract, handoff_export, handoff_import.
+
 ## Host integration
-Works with Claude Code through hooks plus an MCP server (Phase 3).
+Works with Claude Code through hooks plus an MCP server (hooks: Phase 3).
 
 ## License
 To be decided.

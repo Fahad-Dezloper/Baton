@@ -38,6 +38,16 @@ Leases live on the `Task` node (`owner`, `lease_until`, `version`) so a claim is
 - **Handoff**: bounded neighbourhood of a task (decisions, findings, artifacts, open questions), not a transcript.
 - **Isolation**: workspace → graph name, chosen from authenticated context, never from model output.
 
+## Identity and workspace (Phase 2)
+- **Workspace** comes from `BATON_WORKSPACE`, else a hash of the server's working directory. It is
+  never a tool argument, so a model cannot address another workspace.
+- **Actor** is `BATON_ACTOR` or a random per-process id. Each host session launches its own server
+  process, so sessions are distinct actors. Subagents share their parent's process; an optional
+  `actor` label qualifies the id (`parent/label`) and is display-only.
+- Tool results are plain dicts: `ok`, or `ok:false` with `error` (`not_found`, `invalid`) or
+  `degraded:true` + `baton_unavailable` when the store cannot be reached. Connect and query
+  timeouts are short (2 s / 5 s) so a tool call cannot hang a session.
+
 ## Conventions fixed in Phase 1
 - Statuses: task `open|claimed|done`; decision/finding `open|superseded|retracted|tainted`.
 - A decision's `kind` is one of `note|rename|interface|config|storage|other`.

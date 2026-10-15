@@ -35,13 +35,15 @@ Exit check: `python -m unittest` green against a live instance; race test shows 
 **Done**: 28 tests green on FalkorDB v4.22.1 and 6.0.2 (see SPIKES.md, Phase 1 results).
 
 ## Phase 2: MCP server
-- [ ] 2.1 Tool surface and input schemas (`claim_task`, `complete_task`, `get_ready_tasks`,
+- [x] 2.1 Tool surface and input schemas (`claim_task`, `complete_task`, `get_ready_tasks`,
       `post_decision`, `check_conflicts`, `handoff_export`, `handoff_import`, `why`, `retract`)
-- [ ] 2.2 Caller identity (session / subagent id) on every call
-- [ ] 2.3 Error model: fail-open by default, explicit reasons
-- [ ] 2.4 Packaging and a smoke test over the real protocol
+- [x] 2.2 Caller identity (session / subagent id) on every call
+- [x] 2.3 Error model: fail-open by default, explicit reasons
+- [x] 2.4 Packaging and a smoke test over the real protocol
 
 Exit check: a host session can call every tool end to end.
+**Done**: 9 new tests incl. real stdio protocol with two server processes; a real host session
+created, claimed, decided, checked conflicts and exported a handoff through the tools.
 
 ## Phase 3: Host integration (hooks + plugin)
 - [ ] 3.1 Session start: register caller, inject a small handoff summary (size-capped, pointer to the rest)
@@ -61,6 +63,7 @@ Exit check: two real sessions on one repo; a conflict is surfaced with no manual
 Exit check: decisions recorded without the user typing anything.
 
 ## Phase 5: Evaluation
+- [ ] 5.0 Decide runner: Harbor vs the local harness (see docs/EVAL-HARBOR.md open questions)
 - [ ] 5.1 Port the clash harness (`evals/clash`) and add a `plugin` arm runner
 - [ ] 5.2 Repeat each level several times per arm; report rates, not single runs
 - [ ] 5.3 Handoff benchmark: tokens and turns to resume vs pasting the transcript

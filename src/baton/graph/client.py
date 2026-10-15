@@ -66,7 +66,13 @@ class Store:
         if self._graph is None:
             from falkordb import FalkorDB
 
-            self._client = FalkorDB(host=self._host, port=self._port)
+            # Short timeouts: a hook or tool must never hang the host session.
+            self._client = FalkorDB(
+                host=self._host,
+                port=self._port,
+                socket_connect_timeout=float(os.environ.get("BATON_CONNECT_TIMEOUT", "2")),
+                socket_timeout=float(os.environ.get("BATON_QUERY_TIMEOUT", "5")),
+            )
             self._graph = self._client.select_graph(self.graph_name)
         return self._graph
 
