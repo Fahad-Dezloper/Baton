@@ -130,3 +130,35 @@ Caveats (important)
   Overlap was produced with real sustained work instead.
 - Not verified: `ask` interactively, behaviour with compaction/resume, large repos, plugin install
   via a marketplace (only `--plugin-dir` tested).
+
+## Phase 4 results (automatic capture)
+Observed payload shapes (host 2.1.299, `spikes/hooktest/`):
+- Post-edit `tool_response` carries the previous file content (`originalFile`), and for Write a
+  `type` of `create` or `update`; Edit carries `oldString`/`newString`. No pre-edit snapshot needed.
+- A Bash command that exits non-zero does not arrive as a post-tool event (a separate failure
+  event), so test failures are read from the transcript at stop instead.
+- Transcript: JSONL with mixed record types (user, assistant, attachment, system, ...);
+  `message.content` is a string or typed blocks (`text`, `thinking`, `tool_use`, `tool_result`).
+
+What is captured, all deterministically (no model calls)
+- `interface`: public signature changed/added/removed (py, js/ts, go, rs); new modules announce their API
+- `config`: keys changed in config-like files
+- `storage` / `other`: newly imported storage drivers / third-party dependencies
+- `rename`: from `mv` / `git mv`
+- last test run and pass/fail, from the transcript, shown as `Verification:` in the handoff
+Decisions use a stable id per (session, file, kind), so repeated edits update one decision.
+Test files are ignored. Files over 512 KB are skipped. `capture:false` or `BATON_CAPTURE=0` disables.
+
+Evidence
+- 81 tests green (20 pure extraction/transcript tests, 6 integration tests with realistic payloads).
+- Real session, no manual commands: adding a required parameter and a config key produced an
+  `interface` decision with the exact signature diff and a `config` decision naming the key; the
+  verification line came from the real transcript (`unittest ... -> passed: OK`).
+
+Limits
+- Signature detection is regex-based: decorators, nested functions, overloads and
+  multi-language files are approximations. Only the languages above are covered.
+- No semantic understanding: it cannot capture *why* a choice was made, only what changed.
+  An optional model pass was deliberately not built.
+- Transcript is written asynchronously; the tail may lag at stop, so verification is best-effort.
+- Not measured: false-positive rate of derived decisions in real repositories.

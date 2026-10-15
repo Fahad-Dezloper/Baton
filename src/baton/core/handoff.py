@@ -45,7 +45,7 @@ def render_packet(packet: Dict[str, object], max_chars: int = MAX_SUMMARY_CHARS)
         lines.append("Decisions:")
         for d in decs:  # type: ignore[union-attr]
             flag = "" if d["status"] == "open" else " (%s)" % d["status"]
-            lines.append("- [%s]%s %s: %s" % (d.get("kind", "note"), flag, d["author"], _clip(d["text"])))
+            lines.append("- [%s]%s %s: %s" % (d.get("kind", "note"), flag, str(d["author"])[:8], _clip(d["text"])))
     finds = packet.get("findings") or []
     if finds:
         lines.append("Findings:")

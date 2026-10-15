@@ -57,11 +57,12 @@ Exit check: two real sessions on one repo; a conflict is surfaced with no manual
 **Done**: see SPIKES.md, Phase 3 results. Effect on outcomes is measured in Phase 5, not claimed here.
 
 ## Phase 4: Automatic capture
-- [ ] 4.1 Defensive transcript reader (typed content blocks, async-written file)
-- [ ] 4.2 Deterministic decision extraction first; optional model pass behind a flag
-- [ ] 4.3 De-duplication and supersede detection
+- [x] 4.1 Defensive transcript reader (typed content blocks, async-written file)
+- [x] 4.2 Deterministic decision extraction (model pass intentionally not built; see SPIKES.md)
+- [x] 4.3 De-duplication and supersede detection
 
 Exit check: decisions recorded without the user typing anything.
+**Done**: verified in a real session (see SPIKES.md, Phase 4 results).
 
 ## Phase 5: Evaluation
 - [ ] 5.0 Decide runner: Harbor vs the local harness (see docs/EVAL-HARBOR.md open questions)
