@@ -183,6 +183,45 @@ def check_conflicts(
     return out
 
 
+def recent_changes_nearby(
+    store: Store,
+    actor_id: str,
+    path: str,
+    near: Iterable[str] = (),
+    now: Optional[float] = None,
+    window: float = 900.0,
+    limit: int = 5,
+) -> List[dict]:
+    """Other sessions' recent interface/config/storage/rename changes near `path`.
+
+    "Near" = same directory subtree, plus any explicitly related paths (e.g. imported modules).
+    Returns [{id, kind, author, text, path, at}] newest first, one entry per decision.
+    """
+    t = _now(now)
+    p = normalize_paths([path])
+    if not p:
+        return []
+    prefix = p[0].rsplit("/", 1)[0] + "/" if "/" in p[0] else ""
+    rows = store.rows(
+        queries.RECENT_CHANGES_NEARBY,
+        {"actor_id": actor_id, "since": t - window, "path": p[0], "prefix": prefix,
+         "near": normalize_paths(near)},
+        read_only=True,
+    )
+    out: List[dict] = []
+    seen = set()
+    for d, apath in rows:
+        if d["id"] in seen:
+            continue
+        seen.add(d["id"])
+        out.append({"id": d["id"], "kind": d.get("kind", "note"), "author": d["author"],
+                    "text": d["text"], "path": apath,
+                    "at": d.get("updated_at", d.get("created_at", t))})
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _age(seconds: float) -> str:
     seconds = int(max(0, seconds))
     if seconds < 90:

@@ -126,7 +126,9 @@ class HandlerTests(GraphCase):
         a, b = "A-" + uuid.uuid4().hex[:6], "B-" + uuid.uuid4().hex[:6]
         self.run_ev("prompt", {"session_id": a, "prompt": "Add rate limiting to create_order."})
         out = self.run_ev("prompt", {"session_id": b, "prompt": "add RATE limiting to create_order"})
-        self.assertIn("same goal", out["hookSpecificOutput"]["additionalContext"])
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Do NOT implement it a second time", ctx)   # later session stands down
+        self.assertIn(a[:8], ctx)
         self.assertIsNone(self.run_ev("prompt", {"session_id": a, "prompt": "something else entirely"}))
 
     def test_shared_preamble_is_not_a_duplicate(self):
@@ -136,7 +138,7 @@ class HandlerTests(GraphCase):
         out = self.run_ev("prompt", {"session_id": b, "prompt": pre + "TICKET: add a csv export"})
         self.assertIsNone(out)  # different request behind the same boilerplate
         dup = self.run_ev("prompt", {"session_id": c, "prompt": pre + "TICKET: make storage durable"})
-        self.assertIn("same goal", dup["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("same request", dup["hookSpecificOutput"]["additionalContext"])
 
     def test_rename_via_bash_is_recorded_and_conflicts(self):
         a, b = "A-" + uuid.uuid4().hex[:6], "B-" + uuid.uuid4().hex[:6]

@@ -49,8 +49,13 @@ def _clip(items: List[str], n: int) -> str:
     return ", ".join(shown) + (" (+%d more)" % more if more > 0 else "")
 
 
-def derive_decisions(path: str, old_text: Optional[str], new_text: Optional[str]) -> List[Dict[str, str]]:
-    """Each result: {"kind", "text"}. `old_text` is None for a newly created file."""
+def derive_decisions(path: str, old_text: Optional[str], new_text: Optional[str],
+                     local_modules: Optional[Set[str]] = None) -> List[Dict[str, str]]:
+    """Each result: {"kind", "text"}. `old_text` is None for a newly created file.
+
+    `local_modules` are top-level names that belong to the project itself; importing them is not
+    a new dependency.
+    """
     if new_text is None or is_test_path(path):
         return []
     if len(new_text) > MAX_BYTES or (old_text is not None and len(old_text) > MAX_BYTES):
@@ -82,7 +87,8 @@ def derive_decisions(path: str, old_text: Optional[str], new_text: Optional[str]
         if keys:
             out.append({"kind": "config", "text": "config change in %s; keys: %s" % (path, _clip(keys, 8))})
 
-    added_mods = sorted(imports(new_text, path) - imports(old_text or "", path))
+    local = local_modules or set()
+    added_mods = sorted((imports(new_text, path) - imports(old_text or "", path)) - local)
     if added_mods:
         storage = [m for m in added_mods if m in STORAGE_MODULES]
         if storage:

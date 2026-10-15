@@ -119,11 +119,62 @@ def on_prompt(store: Store, payload: Dict[str, Any], cfg: Config, now: Optional[
     dups = sessions.duplicate_sessions(store, actor, goal, now=now)
     if not dups:
         return None
-    lines = ["- %s is already working on the same request: '%s'" % (str(d["owner"])[:13], str(d["goal"])[:120])
-             for d in dups]
-    text = ("[baton] Another live session has the same goal. Coordinate before duplicating work:\n"
-            + "\n".join(lines))
+    names = ", ".join(sorted({str(d["owner"])[:8] for d in dups}))
+    if sessions.designated_session(store, actor, dups):
+        text = ("[baton] Another live session (%s) received this same request. You started first, so "
+                "you are the one to carry it out; the other session has been told to stand down. "
+                "Proceed." % names)
+    else:
+        text = ("[baton] Another live session (%s) received this same request and started first; it "
+                "is already doing it. Do NOT implement it a second time. Reply that session %s is "
+                "handling it and stop, unless the user explicitly asked for a separate attempt."
+                % (names, names))
     return context_output("UserPromptSubmit", text)
+
+
+def _local_modules(project: str) -> set:
+    """Top-level names that belong to the project (importing them is not a new dependency)."""
+    names = set()
+    try:
+        for entry in os.listdir(project):
+            if entry.startswith("."):
+                continue
+            stem = os.path.splitext(entry)[0]
+            names.add(entry)
+            names.add(stem)
+    except OSError:
+        pass
+    return names
+
+
+_PY_FROM = re.compile(r"^[ \t]*from\s+([A-Za-z_][\w.]*)\s+import\s+([\w, ]+)", re.M)
+_PY_IMPORT = re.compile(r"^[ \t]*import\s+([A-Za-z_][\w.]*)", re.M)
+
+
+def related_paths(project: str, rel: str) -> List[str]:
+    """Project files this file imports (best effort, python only)."""
+    if not rel.endswith(".py"):
+        return []
+    try:
+        with open(os.path.join(project, rel), errors="ignore") as f:
+            text = f.read(200_000)
+    except OSError:
+        return []
+    mods: List[str] = []
+    for m in _PY_FROM.finditer(text):
+        base = m.group(1)
+        mods.append(base)
+        for name in re.split(r"[,\s]+", m.group(2).strip()):
+            if name and name != "import":
+                mods.append(base + "." + name)
+    for m in _PY_IMPORT.finditer(text):
+        mods.append(m.group(1))
+    out: List[str] = []
+    for mod in mods:
+        for cand in (mod.replace(".", "/") + ".py", mod.replace(".", "/") + "/__init__.py"):
+            if os.path.exists(os.path.join(project, cand)) and cand not in out:
+                out.append(cand)
+    return out
 
 
 def on_pre_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Optional[float] = None):
@@ -133,18 +184,44 @@ def on_pre_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Optiona
         return None
     actor = actor_from(payload)
     res = decisions.check_conflicts(store, actor, paths, now=now)
-    if not res["has_conflicts"]:
+
+    nearby: List[dict] = []
+    seen_ids = set()
+    for p in paths:
+        for c in decisions.recent_changes_nearby(
+            store, actor, p, near=related_paths(project, p), now=now
+        ):
+            if c["id"] not in seen_ids:
+                seen_ids.add(c["id"])
+                nearby.append(c)
+    # a decision already reported as a same-file collision is not repeated
+    same_file_ids = {d["id"] for d in res["decisions"]}  # type: ignore[union-attr]
+    nearby = [c for c in nearby if c["id"] not in same_file_ids][:5]
+
+    if not res["has_conflicts"] and not nearby:
         return None
-    ids = sorted([d["id"] for d in res["decisions"]] + [t["id"] for t in res["leases"]])  # type: ignore[union-attr]
+    ids = sorted([d["id"] for d in res["decisions"]] + [t["id"] for t in res["leases"]]  # type: ignore[union-attr]
+                 + [c["id"] + "@" + str(int(c["at"])) for c in nearby])
     signature = "%s|%s" % (",".join(paths), ",".join(ids))
     if cfg.policy == "warn" and _already_warned(actor, signature):
         return None
     _remember_warned(actor, signature)
-    summary = decisions.describe_conflicts(res, now=now)
-    text = ("[baton] Possible collision on %s:\n%s\n"
-            "Check what the other work is doing before overwriting it. If you go ahead, record what "
-            "you changed with post_decision so others can see it." % (", ".join(paths), summary))
-    if cfg.policy in ("ask", "deny"):
+
+    parts: List[str] = []
+    if res["has_conflicts"]:
+        parts.append("[baton] Possible collision on %s:\n%s\n"
+                     "Check what the other work is doing before overwriting it. If you go ahead, record "
+                     "what you changed with post_decision so others can see it."
+                     % (", ".join(paths), decisions.describe_conflicts(res, now=now)))
+    if nearby:
+        lines = ["- %s changed %s (%s): %s" % (str(c["author"])[:8], c["path"], c["kind"],
+                                                str(c["text"])[:220]) for c in nearby]
+        parts.append("[baton] Other sessions recently changed files related to %s. Make sure your "
+                     "edit agrees with these (names, signatures, config keys):\n%s"
+                     % (", ".join(paths), "\n".join(lines)))
+    text = "\n\n".join(parts)
+
+    if res["has_conflicts"] and cfg.policy in ("ask", "deny"):
         return {"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": cfg.policy,
@@ -185,7 +262,8 @@ def _capture_edit(store: Store, actor: str, payload: Dict[str, Any], path: str, 
     if not created and old is None:
         return  # cannot diff without the previous content
     new = derive.new_text_for_edit(tool, inp, resp, old)
-    for d in derive.derive_decisions(path, None if created else old, new):
+    local = _local_modules(project_dir_from(payload))
+    for d in derive.derive_decisions(path, None if created else old, new, local_modules=local):
         decisions.upsert_decision(
             store, actor, derive.decision_id(actor, path, d["kind"]), d["text"],
             artifacts=[path], kind=d["kind"], now=now,

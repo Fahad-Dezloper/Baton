@@ -89,6 +89,19 @@ def duplicate_sessions(store: Store, actor: str, goal: str, now: Optional[float]
     ]
 
 
+def designated_session(store: Store, actor: str, dups: List[dict]) -> bool:
+    """Among sessions given the same request, exactly one proceeds: earliest start, then smallest id.
+
+    Every session computes the same order from the same data, so the others can stand down.
+    """
+    mine = store.rows(
+        "MATCH (t:Task {id: $id}) RETURN t.created_at", {"id": session_task_id(actor)}, read_only=True
+    )
+    my_key = (mine[0][0] if mine and mine[0][0] is not None else float("inf"), actor)
+    others = [(d.get("created_at", float("inf")), str(d.get("owner", ""))) for d in dups]
+    return all(my_key <= o for o in others)
+
+
 def end_session(store: Store, actor: str, now: Optional[float] = None) -> None:
     store.query(
         "MATCH (t:Task {id: $id}) SET t.status = 'done', t.lease_until = 0, t.done_at = $now",
@@ -116,6 +129,7 @@ def briefing(store: Store, actor: str, now: Optional[float] = None,
 
     live = store.rows(
         "MATCH (t:Task {status: 'claimed'}) WHERE t.owner <> $actor AND t.lease_until >= $now "
+        "AND NOT coalesce(t.auto_goal, false) "
         "OPTIONAL MATCH (t)-[:TOUCHES]->(a:Artifact) "
         "WITH t, collect(a.path)[..6] AS paths ORDER BY t.last_edit_at DESC LIMIT 5 RETURN t, paths",
         {"actor": actor, "now": t},

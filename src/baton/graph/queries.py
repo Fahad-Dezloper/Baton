@@ -102,7 +102,21 @@ MATCH (d:Decision {id: $id})-[:BASED_ON*1..8]->(s:Finding)
 RETURN DISTINCT s
 """
 
+# Recent non-note decisions by others about files near the one being edited (same directory
+# subtree) or explicitly related (imported). Excludes the file itself: same-file collisions are
+# reported by the stricter queries above.
+RECENT_CHANGES_NEARBY = """
+MATCH (d:Decision)-[:ABOUT]->(a:Artifact)
+WHERE d.author <> $actor_id AND d.status IN ['open', 'tainted'] AND d.kind <> 'note'
+  AND coalesce(d.updated_at, d.created_at) >= $since
+  AND a.path <> $path AND (a.path STARTS WITH $prefix OR a.path IN $near)
+RETURN d, a.path
+ORDER BY coalesce(d.updated_at, d.created_at) DESC
+LIMIT 20
+"""
+
 ALL = {
+    "RECENT_CHANGES_NEARBY": RECENT_CHANGES_NEARBY,
     "CLAIM_TASK": CLAIM_TASK,
     "RENEW_LEASE": RENEW_LEASE,
     "COMPLETE_TASK": COMPLETE_TASK,
