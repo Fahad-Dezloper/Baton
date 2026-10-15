@@ -28,8 +28,8 @@ MAX_LIST = 50
 
 
 def default_workspace(cwd: Optional[str] = None) -> str:
-    """Stable workspace id from the host-controlled working directory (never from tool input)."""
-    cwd = os.path.abspath(cwd or os.getcwd())
+    """Stable workspace id from the host-controlled project directory (never from tool input)."""
+    cwd = os.path.abspath(cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
     digest = hashlib.sha1(cwd.encode()).hexdigest()[:8]
     return "%s-%s" % (os.path.basename(cwd) or "root", digest)
 
@@ -45,7 +45,12 @@ def _clean_list(items: Optional[Iterable[str]]) -> List[str]:
 class Service:
     def __init__(self, store: Store, base_actor: Optional[str] = None):
         self.store = store
-        self.base_actor = base_actor or os.environ.get("BATON_ACTOR") or "session-" + uuid.uuid4().hex[:8]
+        self.base_actor = (
+            base_actor
+            or os.environ.get("BATON_ACTOR")
+            or os.environ.get("CLAUDE_CODE_SESSION_ID")  # same id the host's hooks receive
+            or "session-" + uuid.uuid4().hex[:8]
+        )
         self._bootstrapped = False
 
     # -- identity ---------------------------------------------------------

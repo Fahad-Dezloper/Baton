@@ -1,0 +1,55 @@
+{
+  "pid": 31181,
+  "chain": [
+    [
+      "31181",
+      "31163",
+      "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python"
+    ],
+    [
+      "31163",
+      "31161",
+      "claude"
+    ],
+    [
+      "31161",
+      "46285",
+      "/bin/zsh"
+    ],
+    [
+      "46285",
+      "45619",
+      "claude"
+    ],
+    [
+      "45619",
+      "45618",
+      "-zsh"
+    ],
+    [
+      "45618",
+      "1273",
+      "login"
+    ],
+    [
+      "1273",
+      "1",
+      "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal"
+    ]
+  ],
+  "env_interesting": {
+    "SECURITYSESSIONID": "186af",
+    "TERM_SESSION_ID": "EC2839EC-F9EE-444F-AF5D-E5A5B474159D",
+    "AI_AGENT": "claude-code_2-1-299_harness",
+    "CLAUDE_CODE_ENTRYPOINT": "sdk-cli",
+    "CLAUDE_CODE_EXECPATH": "/Users/dezloper/.local/share/claude/versions/2.1.296",
+    "CLAUDECODE": "1",
+    "CLAUDE_CODE_SESSION_ID": "20f1cd62-eb72-4dba-968e-764e9cfe4b86",
+    "CLAUDE_CODE_SESSION_ATTENDED": "1",
+    "CLAUDE_PID": "46285",
+    "CLAUDE_EFFORT": "medium",
+    "CLAUDE_CODE_MESSAGING_SOCKET": "/tmp/cc-socks/31163.sock",
+    "CLAUDE_PROJECT_DIR": "/Users/dezloper/Desktop/baton/spikes/identity"
+  },
+  "env_key_count": 48
+}

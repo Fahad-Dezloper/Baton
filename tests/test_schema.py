@@ -30,8 +30,14 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(graph_name("my repo/1"), "baton_my_repo_1")
 
     def test_hook_cli_fails_open_on_known_commands(self):
-        for sub in cli.SUBCOMMANDS:
-            self.assertEqual(cli.main([sub]), 0)
+        import io
+
+        os.environ["BATON_DISABLED"] = "1"
+        try:
+            for sub in cli.SUBCOMMANDS:
+                self.assertEqual(cli.main([sub], stdin=io.StringIO("{}")), 0)
+        finally:
+            del os.environ["BATON_DISABLED"]
 
     def test_hook_cli_rejects_unknown(self):
         self.assertEqual(cli.main(["nope"]), 2)

@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/probe_hook.py\" session_start", "timeout": 20 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit|mcp__.*", "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/probe_hook.py\" pre_tool", "timeout": 20 } ] }
+    ]
+  }
+}

@@ -152,15 +152,29 @@ def check_conflicts(
     return out
 
 
-def describe_conflicts(result: Dict[str, object]) -> str:
+def _age(seconds: float) -> str:
+    seconds = int(max(0, seconds))
+    if seconds < 90:
+        return "%ds ago" % seconds
+    if seconds < 5400:
+        return "%dm ago" % (seconds // 60)
+    return "%dh ago" % (seconds // 3600)
+
+
+def describe_conflicts(result: Dict[str, object], now: Optional[float] = None) -> str:
     """Human-readable summary, small enough to inject as context."""
+    now = time.time() if now is None else now
     lines: List[str] = []
     for d in result["decisions"]:  # type: ignore[union-attr]
         lines.append(
             "- %s decision by %s on %s: %s" % (d.get("kind", "note"), d["author"], ", ".join(d["paths"]), d["text"])
         )
     for t in result["leases"]:  # type: ignore[union-attr]
-        lines.append("- task '%s' held by %s touches %s" % (t["goal"], t["owner"], ", ".join(t["paths"])))
+        who = str(t["owner"])[:13]
+        when = ""
+        if t.get("last_edit_at"):
+            when = ", last edit %s" % _age(now - t["last_edit_at"])
+        lines.append("- %s is working on '%s' touching %s%s" % (who, str(t["goal"])[:120], ", ".join(t["paths"]), when))
     for t in result["duplicates"]:  # type: ignore[union-attr]
         lines.append("- same ticket already %s by %s: %s" % (t["status"], t.get("owner") or "nobody", t["goal"]))
     return "\n".join(lines)

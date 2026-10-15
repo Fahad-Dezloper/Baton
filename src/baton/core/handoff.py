@@ -30,6 +30,8 @@ def render_packet(packet: Dict[str, object], max_chars: int = MAX_SUMMARY_CHARS)
         "HANDOFF %s" % packet["id"],
         "Task %s [%s]: %s" % (task["id"], task["status"], _clip(task["goal"])),  # type: ignore[index]
     ]
+    if packet.get("note"):
+        lines.append("Last status: %s" % _clip(packet["note"], 400))
     deps = packet.get("dependencies") or []
     if deps:
         lines.append("Depends on: " + "; ".join("%s [%s]" % (d["id"], d["status"]) for d in deps))  # type: ignore[union-attr]
@@ -65,7 +67,10 @@ def export_handoff(
     max_items: int = MAX_ITEMS,
     max_chars: int = MAX_SUMMARY_CHARS,
     now: Optional[float] = None,
+    handoff_id: Optional[str] = None,
+    note: Optional[str] = None,
 ) -> Dict[str, object]:
+    """Export a handoff. Passing `handoff_id` makes it idempotent: the same handoff is rebuilt."""
     task = get_task(store, task_id)
     if task is None:
         raise KeyError("task not found: %s" % task_id)
@@ -108,11 +113,13 @@ def export_handoff(
                 read_only=True,
             )
         ][:max_items]
-    hid = new_id("hnd")
+    hid = handoff_id or new_id("hnd")
+    store.query("MATCH (h:Handoff {id: $hid})-[r:INCLUDES]->() DELETE r", {"hid": hid})
     store.query(
-        "MATCH (t:Task {id: $tid}) CREATE (h:Handoff {id: $hid, task_id: $tid, created_by: $actor,"
-        " created_at: $now})-[:INCLUDES]->(t)",
-        {"tid": task_id, "hid": hid, "actor": actor_id, "now": t},
+        "MATCH (t:Task {id: $tid}) MERGE (h:Handoff {id: $hid})"
+        " SET h.task_id = $tid, h.created_by = $actor, h.created_at = $now, h.note = $note"
+        " MERGE (h)-[:INCLUDES]->(t)",
+        {"tid": task_id, "hid": hid, "actor": actor_id, "now": t, "note": note or ""},
     )
     if paths:
         store.query(
@@ -140,6 +147,7 @@ def export_handoff(
         "decisions": decisions,
         "findings": findings,
         "omitted": omitted,
+        "note": note or "",
     }
     packet["text"] = render_packet(packet, max_chars)
     store.query("MATCH (h:Handoff {id: $hid}) SET h.summary = $s", {"hid": hid, "s": packet["text"]})
@@ -172,6 +180,7 @@ def import_handoff(
         "decisions": sorted((x for kind, x in inc if kind == "Decision"), key=lambda d: -d["created_at"]),
         "findings": [x for kind, x in inc if kind == "Finding"],
         "omitted": 0,
+        "note": h.get("note", ""),
     }
     packet["text"] = render_packet(packet, max_chars)
     return packet
