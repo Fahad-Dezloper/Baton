@@ -19,8 +19,12 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(len(schema.REL_TYPES), len(set(schema.REL_TYPES)))
 
     def test_queries_are_parameterized(self):
+        parameter_free = {"READY_TASKS"}
         for name, q in queries.ALL.items():
-            self.assertIn("$", q, name)
+            if name in parameter_free:
+                self.assertNotIn("$", q, name)
+            else:
+                self.assertIn("$", q, name)
 
     def test_graph_name_is_sanitized(self):
         self.assertEqual(graph_name("my repo/1"), "baton_my_repo_1")
