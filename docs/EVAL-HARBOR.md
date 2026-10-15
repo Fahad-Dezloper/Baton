@@ -61,3 +61,21 @@ Arms = two agent configurations of the same task (`baseline`, `plugin`).
 If Harbor cannot host concurrent sessions, keep `evals/clash` as the runner and use a simple
 repeat loop (same checker, same fixture). The headline numbers are the same; only portability
 differs.
+
+## Verified (Phase 5.0, 2026-10-15)
+- Harbor 0.24.0 installs in the project venv; local Docker is the default sandbox.
+- A custom agent loads by import path; subclassing Harbor's own Claude Code agent reuses its
+  install, subscription-token auth (`CLAUDE_FORCE_OAUTH=1` + `CLAUDE_CODE_OAUTH_TOKEN`) and
+  settings handling. Only `run` is overridden to start N concurrent sessions.
+- One image holds FalkorDB, Claude Code, baton and the fixture; each trial starts a fresh container.
+- No-model infrastructure checks pass: the verifier scores an untouched checkout as not clash-free
+  (2 failed checks), and in the plugin arm the second of two simulated sessions receives the
+  collision warning inside the sandbox with FalkorDB running in-container.
+- Pitfall found and fixed: starting `redis-server --daemonize yes` inside an exec kept the exec's
+  pipes open (9.5 min stall + 15 min teardown). Fixed by starting it fully detached and shutting it
+  down explicitly. Dry-run now takes about 15 s.
+
+## Not yet verified
+- Real concurrent sessions with the subscription token inside the sandbox (needs the token).
+- Rate-limit behaviour for 4-6 simultaneous sessions on a Max plan.
+- Whether `mcp__plugin_baton_baton__*` tool permissions behave as expected headless.
