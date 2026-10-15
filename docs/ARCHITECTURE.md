@@ -32,7 +32,7 @@ Leases live on the `Task` node (`owner`, `lease_until`, `version`) so a claim is
 
 ## Key behaviours
 - **Atomic claim**: a single `MATCH … WHERE … SET … RETURN` so writes serialized per graph give
-  exactly one winner. **ASSUMED**; Phase 0.2 verifies.
+  exactly one winner. **VERIFIED** in Phase 0.2 (see SPIKES.md).
 - **Conflict check**: open decisions or live leases touching the same artifacts, authored by someone else.
 - **Retraction**: reverse traversal over `BASED_ON` from a finding or decision.
 - **Handoff**: bounded neighbourhood of a task (decisions, findings, artifacts, open questions), not a transcript.

@@ -8,15 +8,15 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 ## Phase 0: Foundations and spikes (verify the unknowns)
 Goal: replace assumptions with measured facts before building on them.
 
-- [ ] 0.1 FalkorDB runs locally via `docker compose up`; pin the image tag in `docker-compose.yml`
-- [ ] 0.2 Spike: N concurrent `claim` queries on one task; exactly one winner
-- [ ] 0.3 Spike: write serialization per graph, and whether writes to different graphs overlap
-- [ ] 0.4 Spike: host hook behaviours on the installed version: injected context at session start,
+- [x] 0.1 FalkorDB runs locally via `docker compose up`; pin the image tag in `docker-compose.yml`
+- [x] 0.2 Spike: N concurrent `claim` queries on one task; exactly one winner
+- [x] 0.3 Spike: write serialization per graph, and whether writes to different graphs overlap
+- [x] 0.4 (partly; see SPIKES.md) Spike: host hook behaviours on the installed version: injected context at session start,
       pre-tool `ask`/`deny`, subagent identity field, direct MCP tool hook, what a stop hook can read
-- [ ] 0.5 Decide transport: stdio vs HTTP for the server, and hook to core call path
+- [x] 0.5 Decide transport: stdio vs HTTP for the server, and hook to core call path
 
 Exit check: a written `docs/SPIKES.md` with results; every assumption in `ARCHITECTURE.md` marked
-verified or changed.
+verified or changed. **Done**, with open items listed in SPIKES.md.
 
 ## Phase 1: Graph core (library, no network surface)
 Goal: all coordination logic as plain, tested Python over FalkorDB.
