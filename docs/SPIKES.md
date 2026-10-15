@@ -87,3 +87,13 @@ NOT verified yet
 - Transcript shape and decision extraction (Phase 4.1)
 - Behaviour of `ask` interactively (Phase 3.2, manual check)
 - Cause of the mid-write read stall (low priority)
+
+## Phase 1 results (core library)
+- 28 tests, all green on FalkorDB `v4.22.1` and `6.0.2`.
+- Final `CLAIM_TASK` (includes the dependency check): exactly one winner in 400/400 rounds at
+  32 workers; p95 about 1.9 ms; the non-atomic control double-claimed in 200/200 rounds.
+- A test caught a real design flaw: recency-only truncation of a handoff dropped the one
+  decision that carried provenance. Fixed by priority ranking (see ARCHITECTURE.md).
+- Isolation canary: a fact in one workspace graph is invisible from another; hostile workspace
+  names cannot escape the `baton_` prefix.
+- Not covered yet: behaviour under network faults or replicas; very large graphs.

@@ -21,17 +21,18 @@ verified or changed. **Done**, with open items listed in SPIKES.md.
 ## Phase 1: Graph core (library, no network surface)
 Goal: all coordination logic as plain, tested Python over FalkorDB.
 
-- [ ] 1.1 Idempotent schema bootstrap (indexes, constraints)
-- [ ] 1.2 Workspace → graph name mapping (one graph per tenant/workspace)
-- [ ] 1.3 Tasks: create, dependencies, ready frontier
-- [ ] 1.4 Leases: claim, renew, release, complete (atomic, versioned, expiry)
-- [ ] 1.5 Decisions: post, supersede, link to artifacts, open/closed status
-- [ ] 1.6 Conflict detection: overlapping artifacts, in-flight renames/config changes, duplicate tickets
-- [ ] 1.7 Provenance: findings, `why`, `retract` with blast radius
-- [ ] 1.8 Handoff: bounded export, import, size budget
-- [ ] 1.9 Integration tests against live FalkorDB (race test, tenant canary, retraction correctness)
+- [x] 1.1 Idempotent schema bootstrap (indexes, constraints)
+- [x] 1.2 Workspace → graph name mapping (one graph per tenant/workspace)
+- [x] 1.3 Tasks: create, dependencies, ready frontier
+- [x] 1.4 Leases: claim, renew, release, complete (atomic, versioned, expiry)
+- [x] 1.5 Decisions: post, supersede, link to artifacts, open/closed status
+- [x] 1.6 Conflict detection: overlapping artifacts, in-flight renames/config changes, duplicate tickets
+- [x] 1.7 Provenance: findings, `why`, `retract` with blast radius
+- [x] 1.8 Handoff: bounded export, import, size budget
+- [x] 1.9 Integration tests against live FalkorDB (race test, tenant canary, retraction correctness)
 
 Exit check: `python -m unittest` green against a live instance; race test shows one winner.
+**Done**: 28 tests green on FalkorDB v4.22.1 and 6.0.2 (see SPIKES.md, Phase 1 results).
 
 ## Phase 2: MCP server
 - [ ] 2.1 Tool surface and input schemas (`claim_task`, `complete_task`, `get_ready_tasks`,

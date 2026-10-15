@@ -9,7 +9,7 @@ ticket. And when a session ends, the next one starts from zero.
 baton keeps a small graph of **who is working on what, what has been decided, and what depends on
 what**, so sessions can check before they act and pick up where the last one stopped.
 
-> Status: scaffold. See [docs/PLAN.md](docs/PLAN.md) for the phased build and
+> Status: core library done (Phase 1). Server and host integration are next. See [docs/PLAN.md](docs/PLAN.md) for the phased build and
 > [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the draft design.
 
 ## Layout

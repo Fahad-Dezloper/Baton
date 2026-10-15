@@ -38,6 +38,16 @@ Leases live on the `Task` node (`owner`, `lease_until`, `version`) so a claim is
 - **Handoff**: bounded neighbourhood of a task (decisions, findings, artifacts, open questions), not a transcript.
 - **Isolation**: workspace → graph name, chosen from authenticated context, never from model output.
 
+## Conventions fixed in Phase 1
+- Statuses: task `open|claimed|done`; decision/finding `open|superseded|retracted|tainted`.
+- A decision's `kind` is one of `note|rename|interface|config|storage|other`.
+- Retraction marks the root `retracted` and every transitive dependent decision `tainted`.
+- Conflicts reported: open/tainted decisions by others, live leases by others on the same artifact,
+  and duplicate tickets (same normalized goal, unfinished, other owner).
+- Handoff export is bounded by item count and characters. When truncating it keeps tainted
+  decisions first, then non-note kinds, then newest. (Pure recency dropped important older
+  decisions in testing.)
+
 ## Failure policy
 Fail open. If the graph is unreachable, the host session continues unaffected; coordination
 features degrade to no-ops with a visible notice.
