@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baton"
+version = "0.0.1"
+description = "Shared task, decision and handoff graph for parallel coding sessions, backed by FalkorDB"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "falkordb",
+  "mcp",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+baton = "baton.hooks.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
