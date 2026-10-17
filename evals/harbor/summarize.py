@@ -36,7 +36,7 @@ def trials(job_dir):
     for t in sorted(glob.glob(os.path.join(job_dir, "*__*"))):
         if not os.path.isdir(t):
             continue
-        m = re.search(r"clash-(l\d)", os.path.basename(t))
+        m = re.search(r"clash-(l\d+)", os.path.basename(t))
         reward = load(os.path.join(t, "verifier", "reward.json"))
         check = load(os.path.join(t, "verifier", "check.json")) or {}
         warnings = errors = 0

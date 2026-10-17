@@ -107,28 +107,43 @@ Settings (`.baton.json` in the project, or environment): `policy` = `warn` (defa
 `deny`; `enabled`; `lease_seconds`; `capture`. `BATON_DISABLED=1` turns it off. **Fails open:** if the
 store is unreachable, hooks print nothing and never block the session. Each hook call takes roughly 0.1-0.15 s.
 
-Tests: `.venv/bin/python -B -m unittest discover -s tests -t .` (109 tests, run against a live FalkorDB v4.22.1; also passed on 6.0.2).
+Tests: `.venv/bin/python -B -m unittest discover -s tests -t .` (124 tests, run against a live FalkorDB v4.22.1; also passed on 6.0.2).
 
 ## Evaluation (honest summary)
-Parallel Claude Code sessions (cheap model, 5 attempts per cell) are started at the same moment on one
-shared checkout with overlapping tickets. A scripted checker scores whether the combined result is
-collision-free. Harness, tasks and checkers: [`evals/`](evals); full write-up and caveats:
-[docs/RESULTS.md](docs/RESULTS.md).
+Parallel Claude Code sessions (cheap model) are started at the same moment on one shared checkout
+with overlapping tickets. A scripted checker scores whether the combined result is collision-free.
+Harness, tasks and checkers: [`evals/`](evals). Write-ups with all caveats:
+[docs/RESULTS.md](docs/RESULTS.md) (rounds 1-3), [docs/RESULTS-HELDOUT.md](docs/RESULTS-HELDOUT.md),
+[docs/RESULTS-PROVENANCE.md](docs/RESULTS-PROVENANCE.md).
 
-| | Baseline | Plugin v1 | Plugin v2 | Plugin v3 |
-|---|---|---|---|---|
-| Clash-free, L1-L5 (of 25) | 12 | 9 | 11 | 14 |
-| Failed checks per trial, L3-L5 | 1.87 | 1.60 | 1.20 | 0.87 |
+**Collision avoidance.** Levels L1-L5 were tuned on over three rounds, so the fresh result is the
+held-out set L8-L10 (written and validated before any run, success metrics stated in advance, plugin
+unchanged, 7 attempts per cell):
 
-- The share of fully collision-free trials did **not** change significantly (14/25 vs 12/25, p = 0.78).
-- Failed checks per trial fell each round (1.87 to 0.87; post-hoc p = 0.045 after three tuning rounds
-  on the same tasks, so treat as suggestive).
-- Duplicate-ticket tasks (L5) are not solved (0/5). One level got worse (L2, 3/5 vs 5/5).
-- The mechanism itself is verified: real warnings reach real concurrent sessions with nothing typed,
-  with zero hook errors in 40 v3 trials.
+| | Baseline | Plugin v3 |
+|---|---|---|
+| Held-out L8-L10, clean runs (of 21) | 15 | **20** |
+| Held-out, failed checks per trial | 0.48 | **0.10** |
+| Tuned L1-L5, clean runs (of 25) | 12 | 14 |
 
-Limits: small samples, one model, one fixture project, tasks and scorer written by the same author,
-three rounds of tuning on the same levels, one level edited after results were seen.
+- Held-out difference: Fisher p = 0.093, failed checks p = 0.108. The pre-stated bar was p < 0.05, so
+  **we do not claim an effect**; the direction is favourable and consistent across rounds.
+- Known defect: a live-session warning can make a session defer too much. In two L2 trials a session
+  saw another session's lease on `db.py`, chose not to edit it, and wrote code calling a function
+  that never existed (baseline edited the file in 5/5). Duplicate-ticket tasks (L5) are not solved (0/5).
+- Sessions that did nothing outside L5: baseline 0/160, plugin v3 1/94.
+
+**Retraction and handoff** (deterministic, [`evals/provenance/`](evals/provenance)). Retracting a
+finding tainted exactly its derived decisions on 25 generated graphs (precision and recall 1.0, ~3 ms).
+Grep over a flat notes file matches that only when every note cites its source by id or verbatim
+quote (recall 0.65 with mixed citations, 0 with paraphrased ones). The graph is only as good as the
+recorded `based_on` links (recall 0.73 if 20% are missing). Handoffs keep tainted and interface
+decisions first; beyond ~50 decisions most notes are dropped by the size budget.
+
+The mechanism itself is verified: real warnings reach real concurrent sessions with nothing typed,
+with zero hook errors across the evaluation trials.
+
+Limits: small samples, one model, one fixture project, tasks and scorer written by the same author.
 
 ## Layout
 ```
