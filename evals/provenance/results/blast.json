@@ -1,0 +1,400 @@
+{
+ "profiles": {
+  "ids": {
+   "strict": {
+    "heirs_caught": 119,
+    "heirs_total": 119,
+    "precision": 0.99820814479638,
+    "recall": 1.0,
+    "exact": 23,
+    "median_ms": 8.242624928243458
+   },
+   "sweep": {
+    "heirs_caught": null,
+    "heirs_total": null,
+    "precision": 0.32519258961071984,
+    "recall": 1.0,
+    "exact": 0,
+    "median_ms": 8.291124948300421
+   }
+  },
+  "quotes": {
+   "strict": {
+    "heirs_caught": 119,
+    "heirs_total": 119,
+    "precision": 0.99820814479638,
+    "recall": 1.0,
+    "exact": 23,
+    "median_ms": 11.361542041413486
+   },
+   "sweep": {
+    "heirs_caught": null,
+    "heirs_total": null,
+    "precision": 0.3246175065267721,
+    "recall": 1.0,
+    "exact": 0,
+    "median_ms": 11.51500002015382
+   }
+  },
+  "mixed": {
+   "strict": {
+    "heirs_caught": 73,
+    "heirs_total": 119,
+    "precision": 0.9970731707317073,
+    "recall": 0.6543517762827464,
+    "exact": 0,
+    "median_ms": 7.048208964988589
+   },
+   "sweep": {
+    "heirs_caught": null,
+    "heirs_total": null,
+    "precision": 0.3295441321558996,
+    "recall": 0.9838173076923077,
+    "exact": 0,
+    "median_ms": 7.123250048607588
+   }
+  },
+  "paraphrase": {
+   "strict": {
+    "heirs_caught": 0,
+    "heirs_total": 119,
+    "precision": 0.0,
+    "recall": 0.0,
+    "exact": 0,
+    "median_ms": 0.2353329909965396
+   },
+   "sweep": {
+    "heirs_caught": null,
+    "heirs_total": null,
+    "precision": 0.3370388275402047,
+    "recall": 0.08671396009082576,
+    "exact": 0,
+    "median_ms": 0.276917009614408
+   }
+  },
+  "id_noise": {
+   "strict": {
+    "heirs_caught": 119,
+    "heirs_total": 119,
+    "precision": 0.8005563185232962,
+    "recall": 1.0,
+    "exact": 0,
+    "median_ms": 9.793124976567924
+   },
+   "sweep": {
+    "heirs_caught": null,
+    "heirs_total": null,
+    "precision": 0.32519258961071984,
+    "recall": 1.0,
+    "exact": 0,
+    "median_ms": 9.978958987630904
+   }
+  }
+ },
+ "n_scenarios": 25,
+ "example_truth_size": 64,
+ "example_graph_nodes": 219,
+ "graph_full": {
+  "precision": 1.0,
+  "recall": 1.0,
+  "median_ms": 2.65429203864187,
+  "exact": 25,
+  "truth_mean": 65.56,
+  "rows": [
+   {
+    "seed": 1,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 3.027666942216456,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 2,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 3.0235840240493417,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 3,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5909579126164317,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 4,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 4.071250092238188,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 5,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5454999413341284,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 6,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.951666945591569,
+    "truth": 66,
+    "found": 66
+   },
+   {
+    "seed": 7,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 3.6305830581113696,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 8,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5554170133545995,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 9,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.9032499296590686,
+    "truth": 67,
+    "found": 67
+   },
+   {
+    "seed": 10,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.588125062175095,
+    "truth": 70,
+    "found": 70
+   },
+   {
+    "seed": 11,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 5.056875059381127,
+    "truth": 74,
+    "found": 74
+   },
+   {
+    "seed": 12,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.3732910631224513,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 13,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.860249951481819,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 14,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.6982499985024333,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 15,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.4965000338852406,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 16,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.475708955898881,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 17,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5668750749900937,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 18,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.547082956880331,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 3.5269579384475946,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 20,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.6325839571654797,
+    "truth": 72,
+    "found": 72
+   },
+   {
+    "seed": 21,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.701333025470376,
+    "truth": 65,
+    "found": 65
+   },
+   {
+    "seed": 22,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5623750407248735,
+    "truth": 64,
+    "found": 64
+   },
+   {
+    "seed": 23,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.65429203864187,
+    "truth": 66,
+    "found": 66
+   },
+   {
+    "seed": 24,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 2.5637910002842546,
+    "truth": 66,
+    "found": 66
+   },
+   {
+    "seed": 25,
+    "precision": 1.0,
+    "recall": 1.0,
+    "ms": 5.196750047616661,
+    "truth": 64,
+    "found": 64
+   }
+  ]
+ },
+ "graph_capture80": {
+  "precision": 1.0,
+  "recall": 0.7281307402202924,
+  "exact": 0
+ },
+ "status": {
+  "tainted_status_exact": 25,
+  "superseded_untouched": 25,
+  "false_taint": 0,
+  "missed_taint": 0
+ },
+ "orphaned_replacements": {
+  "derived_superseded_replaced": 119,
+  "left_open_untainted": 119
+ },
+ "chain": [
+  {
+   "length": 4,
+   "tainted": 4,
+   "expected": 4,
+   "deepest_tainted": 4,
+   "still_open": [],
+   "why_from_tip_finding_found": true,
+   "why_from_tip_decisions": 3
+  },
+  {
+   "length": 6,
+   "tainted": 6,
+   "expected": 6,
+   "deepest_tainted": 6,
+   "still_open": [],
+   "why_from_tip_finding_found": true,
+   "why_from_tip_decisions": 5
+  },
+  {
+   "length": 8,
+   "tainted": 8,
+   "expected": 8,
+   "deepest_tainted": 8,
+   "still_open": [],
+   "why_from_tip_finding_found": true,
+   "why_from_tip_decisions": 7
+  },
+  {
+   "length": 9,
+   "tainted": 8,
+   "expected": 9,
+   "deepest_tainted": 8,
+   "still_open": [
+    9
+   ],
+   "why_from_tip_finding_found": false,
+   "why_from_tip_decisions": 8
+  },
+  {
+   "length": 10,
+   "tainted": 8,
+   "expected": 10,
+   "deepest_tainted": 8,
+   "still_open": [
+    9,
+    10
+   ],
+   "why_from_tip_finding_found": false,
+   "why_from_tip_decisions": 8
+  },
+  {
+   "length": 12,
+   "tainted": 8,
+   "expected": 12,
+   "deepest_tainted": 8,
+   "still_open": [
+    9,
+    10,
+    11
+   ],
+   "why_from_tip_finding_found": false,
+   "why_from_tip_decisions": 8
+  },
+  {
+   "length": 20,
+   "tainted": 8,
+   "expected": 20,
+   "deepest_tainted": 8,
+   "still_open": [
+    9,
+    10,
+    11
+   ],
+   "why_from_tip_finding_found": false,
+   "why_from_tip_decisions": 8
+  }
+ ],
+ "wall_s": 13.847470045089722
+}
