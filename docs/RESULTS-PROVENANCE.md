@@ -64,7 +64,9 @@ Reading it honestly:
   and untainted after the retraction. (Verbatim-quoting notes would have caught them; paraphrased ones not.)
   Whether a replacement inherits taint is a product decision, so it is reported, not changed.
 
-### Depth cap (`BASED_ON*1..8` in `graph/queries.py`)
+### Depth cap (`BASED_ON*1..8` in `graph/queries.py`) - FIXED AFTER THIS MEASUREMENT
+
+**Update:** the bound was removed (`*1..`) after an independent review found the same defect; a regression test (`tests/test_hardening.py`, 12-step chain) now passes. The table below is the measurement of the *old* behaviour and is kept for the record.
 
 A linear chain finding -> C1 -> ... -> CL, then retract the finding:
 
