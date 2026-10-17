@@ -123,3 +123,58 @@ claims are about the mechanism and the measurement method, not about an outcome 
 ## Limits
 n = 5 per cell; one model; one fixture; tickets and scoring written by the same author; run-to-run
 variance is large relative to the effects looked for; abstention was counted with a text pattern.
+
+
+# Round 3: plugin v3 (fixes for the three problems round 2 exposed)
+
+Run: 2026-10-17, 11:55-12:40 IST. Same infrastructure, scorer and model. Plugin v3 changes:
+1. Goal text shown to other sessions keeps the start *and* the end of long prompts (stored up to
+   600 characters instead of 200), so a shared preamble no longer hides the ticket.
+2. Collision wording now tells the session to read the file as it is, make its change on top of the
+   other work and not skip its task, and states that a live session on a file is not "the same
+   ticket" unless a "same ticket" line says so.
+3. L6 ticket B now names `shop/inventory.py`. **L6 is therefore no longer held out**: it was edited
+   after seeing results. The L6 baseline was re-run on the new ticket.
+L7 was untouched. Baseline numbers for L1-L5 and L7 are reused from earlier rounds.
+
+## Clash-free trials (out of 5)
+
+| Level | Baseline | Plugin v1 | Plugin v2 | **Plugin v3** |
+|---|---|---|---|---|
+| L1 | 4 | 4 | 4 | **5** |
+| L2 | 5 | 4 | 4 | **3** |
+| L3 | 1 | 0 | 1 | **2** |
+| L4 | 2 | 1 | 2 | **4** |
+| L5 | 0 | 0 | 0 | **0** |
+| **L1-L5** | 12/25 | 9/25 | 11/25 | **14/25** |
+| L6 (edited ticket; not held out) | 0 (re-run) | n/a | n/a | **2** |
+| L7 (held out, unchanged) | 5 | n/a | 4 | **5** |
+
+Failed checks per trial, L3-L5 pooled (15 trials each): baseline 1.87, v1 1.60, v2 1.20, **v3 0.87**.
+
+## Statistics (exact / permutation tests)
+- Clash-free, L1-L5: v3 vs baseline 14/25 vs 12/25, Fisher p = 0.78.
+- L6: 2/5 vs 0/5, p = 0.44.
+- Failed checks, L3-L5 pooled, v3 vs baseline: permutation test p = 0.045 one-sided.
+
+## Reading
+- **Clash-free rate: no significant difference.** The best v3 number (14/25) is still within noise
+  of baseline (12/25).
+- **Failed checks per trial fell in every round** (1.87, 1.60, 1.20, 0.87). The final comparison is
+  nominally significant (p = 0.045), but this is the third round of tuning on the same tasks, with
+  several metrics examined, so the p-value is optimistic. Treat it as suggestive, not confirmed.
+- L5 (duplicate tickets) is still 0/5: failures there are duplicate and orphaned work, which v3 did
+  not target.
+- L2 got worse (3/5 vs 5/5 baseline); with n = 5 this may be noise, but it was not investigated.
+- Not analysed this round: whether abstention decreased after the wording change.
+- Plugin hook errors: 0 in 40 trials.
+
+## Defensible claim
+"Across three rounds the plugin reduced the number of failed checks per trial on collision-heavy
+tasks (1.87 to 0.87, post-hoc p = 0.045) but did not significantly change how often a trial was
+fully collision-free."
+
+## Limits
+Same as round 2, plus: three rounds of tuning on the same L1-L5 tasks (overfitting risk), L6 edited
+after seeing results, no new fixture or model, n = 5 per cell.
+

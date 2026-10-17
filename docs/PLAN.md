@@ -76,13 +76,13 @@ Exit check: a results table comparing `baseline` and `plugin` with run counts an
 
 ## Phase 6: Visibility and demo
 - [ ] 6.1 Live graph view (FalkorDB Browser queries first; small viewer only if time remains)
-- [ ] 6.2 Seeded, scripted two-session scenario with a fallback recording
+- [x] 6.2 Seeded, scripted two-session scenario with a fallback recording
 - [ ] 6.3 Demo script and video
 
 ## Phase 7: Ship
-- [ ] 7.1 README: install, schema, the key Cypher queries, eval table, limits
+- [x] 7.1 README: install, schema, the key Cypher queries, eval table, limits
 - [ ] 7.2 Deployment or full local setup instructions
-- [ ] 7.3 Assistance disclosure and track entry
+- [x] 7.3 Assistance disclosure and track entry
 - [ ] 7.4 Blog post
 - [ ] 7.5 Submission checklist; submit well before the deadline
 
