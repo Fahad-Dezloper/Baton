@@ -30,10 +30,15 @@ def goal_key(goal: str) -> str:
     Computed from the FULL text: long texts are hashed so two requests that merely share a long
     preamble are not mistaken for duplicates.
     """
-    norm = re.sub(r"[^a-z0-9]+", " ", goal.lower()).strip()
+    norm = re.sub(r"[\W_]+", " ", goal.lower()).strip()
+    if not norm:
+        return "u:" + hashlib.sha1(goal.encode()).hexdigest() if goal.strip() else ""
     if len(norm) <= 200:
         return norm
     return "h:" + hashlib.sha1(norm.encode()).hexdigest()
+
+
+MIN_KEY_CHARS = 12  # shorter requests ("continue", "fix the tests") are too generic to call duplicates
 
 
 def _now(now: Optional[float]) -> float:

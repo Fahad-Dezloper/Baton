@@ -8,16 +8,16 @@ import sys
 from typing import Dict, List, Set, Tuple
 
 _PY = [
-    re.compile(r"^[ \t]*(?:async\s+)?def\s+([A-Za-z]\w*)\s*\(([^)]*)\)", re.M),
-    re.compile(r"^[ \t]*class\s+([A-Za-z]\w*)\s*(?:\(([^)]*)\))?", re.M),
+    re.compile(r"^[ \t]*(?:async\s+)?def\s+([A-Za-z]\w*)\s*\(([^)]{0,400})\)", re.M),
+    re.compile(r"^[ \t]*class\s+([A-Za-z]\w*)\s*(?:\(([^)]{0,400})\))?", re.M),
 ]
 _JS = [
-    re.compile(r"^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(([^)]*)\)", re.M),
-    re.compile(r"^[ \t]*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>", re.M),
+    re.compile(r"^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(([^)]{0,400})\)", re.M),
+    re.compile(r"^[ \t]*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(([^)]{0,400})\)\s*=>", re.M),
     re.compile(r"^[ \t]*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)", re.M),
 ]
-_GO = [re.compile(r"^func\s+(?:\([^)]*\)\s*)?([A-Za-z]\w*)\s*\(([^)]*)\)", re.M)]
-_RS = [re.compile(r"^[ \t]*(?:pub\s+)?(?:async\s+)?fn\s+([A-Za-z]\w*)\s*(?:<[^>]*>)?\s*\(([^)]*)\)", re.M)]
+_GO = [re.compile(r"^func\s+(?:\([^)]*\)\s*)?([A-Za-z]\w*)\s*\(([^)]{0,400})\)", re.M)]
+_RS = [re.compile(r"^[ \t]*(?:pub\s+)?(?:async\s+)?fn\s+([A-Za-z]\w*)\s*(?:<[^>]*>)?\s*\(([^)]{0,400})\)", re.M)]
 
 _BY_EXT = {
     ".py": _PY, ".js": _JS, ".jsx": _JS, ".ts": _JS, ".tsx": _JS, ".mjs": _JS,

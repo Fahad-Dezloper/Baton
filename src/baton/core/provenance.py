@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
+from baton.core.safety import scrub
 from baton.core.decisions import ensure_actor, get_decision
 from baton.core.tasks import _now
 from baton.graph import queries
@@ -24,7 +25,7 @@ def add_finding(
     store.query(
         "CREATE (:Finding {id: $id, text: $text, source: $source, confidence: $conf,"
         " status: 'open', author: $actor, created_at: $now})",
-        {"id": fid, "text": text, "source": source, "conf": confidence, "actor": actor_id, "now": _now(now)},
+        {"id": fid, "text": scrub(text, 2000), "source": source, "conf": confidence, "actor": actor_id, "now": _now(now)},
     )
     return get_finding(store, fid)  # type: ignore[return-value]
 

@@ -6,7 +6,8 @@ import time
 from typing import Dict, Iterable, List, Optional
 
 from baton.core.paths import normalize_paths
-from baton.core.tasks import _now, clip_goal, goal_key
+from baton.core.safety import scrub
+from baton.core.tasks import MIN_KEY_CHARS, _now, clip_goal, goal_key
 from baton.graph import queries
 from baton.graph.client import Store, new_id
 
@@ -48,6 +49,7 @@ def post_decision(
     if kind not in DECISION_KINDS:
         raise ValueError("unknown decision kind: %s" % kind)
     did = decision_id or new_id("dec")
+    text = scrub(text, 2000)
     t = _now(now)
     ensure_actor(store, actor_id, now=t)
     store.query(
@@ -97,7 +99,7 @@ def upsert_decision(
         "ON CREATE SET d.status = 'open', d.author = $actor, d.created_at = $now "
         "SET d.text = $text, d.kind = $kind, d.updated_at = $now, d.auto = true "
         "WITH d MATCH (a:Actor {id: $actor}) MERGE (a)-[:DECIDED]->(d)",
-        {"id": decision_id, "actor": actor_id, "text": text, "kind": kind, "now": t},
+        {"id": decision_id, "actor": actor_id, "text": scrub(text, 2000), "kind": kind, "now": t},
     )
     paths = normalize_paths(artifacts)
     if paths:
@@ -163,7 +165,7 @@ def check_conflicts(
         entry = leases.setdefault(task["id"], {**task, "paths": []})
         entry["paths"].append(path)
     duplicates: List[dict] = []
-    if goal:
+    if goal and len(goal_key(goal)) >= MIN_KEY_CHARS:
         duplicates = [
             r[0]
             for r in store.rows(
@@ -235,9 +237,9 @@ def describe_conflicts(result: Dict[str, object], now: Optional[float] = None) -
     """Human-readable summary, small enough to inject as context."""
     now = time.time() if now is None else now
     lines: List[str] = []
-    for d in result["decisions"]:  # type: ignore[union-attr]
+    for d in list(result["decisions"])[:6]:  # type: ignore[union-attr]
         lines.append(
-            "- %s decision by %s on %s: %s" % (d.get("kind", "note"), d["author"], ", ".join(d["paths"]), d["text"])
+            "- %s decision by %s on %s: %s" % (d.get("kind", "note"), scrub(d["author"], 40), ", ".join(d["paths"]), scrub(d["text"], 240))
         )
     for t in result["leases"]:  # type: ignore[union-attr]
         who = str(t["owner"])[:13]

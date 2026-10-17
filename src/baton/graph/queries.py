@@ -64,6 +64,8 @@ OPEN_DECISIONS_FOR_ARTIFACTS = """
 MATCH (d:Decision)-[:ABOUT]->(a:Artifact)
 WHERE a.path IN $paths AND d.status IN ['open', 'tainted'] AND d.author <> $actor_id
 RETURN d, a.path
+ORDER BY coalesce(d.updated_at, d.created_at) DESC
+LIMIT 20
 """
 
 # Live leases on tasks that touch any of the given artifacts, held by someone else.
@@ -82,23 +84,23 @@ RETURN t
 
 # Everything derived (transitively) from a root, per root label.
 BLAST_FROM_DECISION = """
-MATCH (root:Decision {id: $id})<-[:BASED_ON*1..8]-(d:Decision)
+MATCH (root:Decision {id: $id})<-[:BASED_ON*1..]-(d:Decision)
 RETURN DISTINCT d
 """
 
 BLAST_FROM_FINDING = """
-MATCH (root:Finding {id: $id})<-[:BASED_ON*1..8]-(d:Decision)
+MATCH (root:Finding {id: $id})<-[:BASED_ON*1..]-(d:Decision)
 RETURN DISTINCT d
 """
 
 # What a decision was based on (transitively), decisions and findings.
 WHY_DECISIONS = """
-MATCH (d:Decision {id: $id})-[:BASED_ON*1..8]->(s:Decision)
+MATCH (d:Decision {id: $id})-[:BASED_ON*1..]->(s:Decision)
 RETURN DISTINCT s
 """
 
 WHY_FINDINGS = """
-MATCH (d:Decision {id: $id})-[:BASED_ON*1..8]->(s:Finding)
+MATCH (d:Decision {id: $id})-[:BASED_ON*1..]->(s:Finding)
 RETURN DISTINCT s
 """
 

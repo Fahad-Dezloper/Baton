@@ -12,7 +12,8 @@ from typing import Dict, List, Optional
 from baton.core import handoff
 from baton.core.decisions import ensure_actor
 from baton.core.paths import normalize_path
-from baton.core.tasks import _now, clip_goal, goal_key
+from baton.core.safety import scrub
+from baton.core.tasks import MIN_KEY_CHARS, _now, clip_goal, goal_key
 from baton.graph.client import Store
 
 SESSION_LEASE_SECONDS = 900
@@ -62,7 +63,7 @@ def touch(store: Store, actor: str, path: str, now: Optional[float] = None,
 
 def set_goal(store: Store, actor: str, prompt: str, now: Optional[float] = None) -> Optional[str]:
     """First prompt becomes the session's goal. Returns the goal if it was set now."""
-    full = " ".join(prompt.split())
+    full = " ".join(scrub(prompt).split())
     if not full:
         return None
     goal = full[:600]
@@ -78,6 +79,8 @@ def set_goal(store: Store, actor: str, prompt: str, now: Optional[float] = None)
 def duplicate_sessions(store: Store, actor: str, goal: str, now: Optional[float] = None) -> List[dict]:
     """Other live sessions whose request matches this one (`goal` is the full prompt text)."""
     t = _now(now)
+    if len(goal_key(goal)) < MIN_KEY_CHARS:
+        return []
     return [
         r[0]
         for r in store.rows(
@@ -117,7 +120,7 @@ def export_session_handoff(store: Store, actor: str, note: str = "", now: Option
                     {"id": session_task_id(actor), "v": verification[:300]})
     return handoff.export_handoff(
         store, session_task_id(actor), actor, now=now,
-        handoff_id=handoff_id_for(actor), note=note[:600],
+        handoff_id=handoff_id_for(actor), note=scrub(note, 600),
     )
 
 
@@ -153,7 +156,7 @@ def briefing(store: Store, actor: str, now: Optional[float] = None,
         parts.append("Recent decisions by others:")
         for (d,) in decs:
             flag = " (TAINTED: based on a retracted source)" if d["status"] == "tainted" else ""
-            parts.append("- [%s]%s %s" % (d.get("kind", "note"), flag, str(d["text"])[:200]))
+            parts.append("- [%s]%s %s" % (d.get("kind", "note"), flag, scrub(d["text"], 200)))
 
     last = store.rows(
         "MATCH (h:Handoff) WHERE h.created_by <> $actor AND h.created_at >= $since "

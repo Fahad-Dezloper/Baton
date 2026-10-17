@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from baton.capture import derive, transcript
 from baton.core import decisions, sessions
 from baton.core.paths import normalize_path
+from baton.core.safety import scrub
 from baton.graph.client import Store
 from baton.hooks.config import Config
 
@@ -217,7 +218,7 @@ def on_pre_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Optiona
                      % (", ".join(paths), decisions.describe_conflicts(res, now=now)))
     if nearby:
         lines = ["- %s changed %s (%s): %s" % (str(c["author"])[:8], c["path"], c["kind"],
-                                                str(c["text"])[:220]) for c in nearby]
+                                                scrub(c["text"], 220)) for c in nearby]
         parts.append("[baton] Other sessions recently changed files related to %s. Make sure your "
                      "edit agrees with these (names, signatures, config keys):\n%s"
                      % (", ".join(paths), "\n".join(lines)))
