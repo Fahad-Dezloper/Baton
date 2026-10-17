@@ -69,6 +69,24 @@ class HandoffTests(GraphCase):
         self.assertEqual(statuses["HD1"], "tainted")
         self.assertTrue(any(f["status"] == "retracted" for f in imp["findings"]))
 
+    def test_import_keeps_priority_order_under_truncation(self):
+        """A tainted decision must survive the render cap even when it is older than many newer notes."""
+        s = self.store
+        tasks.create_task(s, "prio task", touches=["shop/prio.py"], task_id="prio")
+        provenance.add_finding(s, "A", "bad premise", "ticket-99", finding_id="PF1")
+        decisions.post_decision(s, "A", "TAINTEDMARK old decision", artifacts=["shop/prio.py"],
+                                based_on=["PF1"], decision_id="PD0", now=100.0)
+        for i in range(24):
+            decisions.post_decision(s, "A", "newer note %d " % i + "y" * 260, artifacts=["shop/prio.py"],
+                                    now=200.0 + i)
+        provenance.retract(s, "PF1", "A", reason="obsolete", now=300.0)
+        pk = handoff.export_handoff(s, "prio", "A", max_items=25, max_chars=8000, handoff_id="hprio")
+        self.assertIn("TAINTEDMARK", pk["text"])
+        imp = handoff.import_handoff(s, "B", "hprio", max_chars=3000)
+        self.assertLessEqual(len(imp["text"]), 3000)
+        self.assertIn("TAINTEDMARK", imp["text"])        # tainted outranks recency
+        self.assertEqual(imp["decisions"][0]["id"], "PD0")
+
     def test_missing_task_or_handoff_raises(self):
         with self.assertRaises(KeyError):
             handoff.export_handoff(self.store, "nope", "A")

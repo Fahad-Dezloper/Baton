@@ -18,6 +18,11 @@ _ITEM_CHARS = 280
 LIVE_DECISION_STATUSES = ["open", "tainted"]
 
 
+def _priority(d: dict) -> int:
+    """Same order export uses: tainted first, then non-note kinds, then notes."""
+    return 0 if d.get("status") == "tainted" else (1 if d.get("kind") != "note" else 2)
+
+
 def _clip(text: str, n: int = _ITEM_CHARS) -> str:
     text = " ".join(str(text).split())
     return text if len(text) <= n else text[: n - 1] + "…"
@@ -179,7 +184,8 @@ def import_handoff(
         "task": task,
         "dependencies": [],
         "artifacts": sorted(x["path"] for kind, x in inc if kind == "Artifact"),
-        "decisions": sorted((x for kind, x in inc if kind == "Decision"), key=lambda d: -d["created_at"]),
+        "decisions": sorted((x for kind, x in inc if kind == "Decision"),
+                           key=lambda d: (_priority(d), -d["created_at"])),  # keep priority order when the render is capped
         "findings": [x for kind, x in inc if kind == "Finding"],
         "omitted": 0,
         "note": h.get("note", ""),

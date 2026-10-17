@@ -1,0 +1,69 @@
+{
+ "briefing": "[baton] Coordination context for this repository:\nOther sessions working now:\n- sessA: Migrate the storage layer to sqlite (touching db.py)\nRecent decisions by others:\n- [storage] migrate() keeps version rows in _migrations\n- [interface] Rollback must copy orders into table _orders_bak before dropping anything; the name is fixed by the ops runbook\nLatest handoff from a previous session:\nHANDOFF hnd_92323a4739b8\nTask sess_92323a4739b8 [claimed]: Migrate the storage layer to sqlite\nLast status: UNFINISHED: implement migrate_rollback() in db.py, then stop\nVerification: pytest: 3 passed, 1 failed (test_rollback)\nArtifacts: db.py\nDecisions:\n- [storage] sessA: migrate() keeps version rows in _migrations\n- [interface] sessA: Rollback must copy orders into table _orders_bak before dropping anything; the name is fixed by the ops runbook",
+ "rows": [
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": false,
+   "passed": false,
+   "arm": "without",
+   "run": 0
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": true,
+   "passed": true,
+   "arm": "with",
+   "run": 0
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": false,
+   "passed": false,
+   "arm": "without",
+   "run": 1
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": true,
+   "passed": true,
+   "arm": "with",
+   "run": 1
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": false,
+   "passed": false,
+   "arm": "without",
+   "run": 2
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": true,
+   "passed": true,
+   "arm": "with",
+   "run": 2
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": false,
+   "passed": false,
+   "arm": "without",
+   "run": 3
+  },
+  {
+   "syntax": true,
+   "implemented": true,
+   "uses_runbook_table": true,
+   "passed": true,
+   "arm": "with",
+   "run": 3
+  }
+ ]
+}
