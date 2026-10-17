@@ -27,9 +27,26 @@ MAX_TEXT = 2000
 MAX_LIST = 50
 
 
+def _repo_root(cwd: str) -> str:
+    """Main repository root, so git worktrees of one repository share a graph. Falls back to `cwd`."""
+    if not os.path.exists(os.path.join(cwd, ".git")):
+        return cwd
+    try:
+        import subprocess
+
+        out = subprocess.run(["git", "-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                             capture_output=True, text=True, timeout=1).stdout.strip()
+        if out.endswith("/.git"):
+            return out[: -len("/.git")]
+    except Exception:
+        pass
+    return cwd
+
+
 def default_workspace(cwd: Optional[str] = None) -> str:
     """Stable workspace id from the host-controlled project directory (never from tool input)."""
     cwd = os.path.abspath(cwd or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    cwd = _repo_root(cwd)
     digest = hashlib.sha1(cwd.encode()).hexdigest()[:8]
     return "%s-%s" % (os.path.basename(cwd) or "root", digest)
 
@@ -40,6 +57,19 @@ def _clip(text: Any, n: int = MAX_TEXT) -> str:
 
 def _clean_list(items: Optional[Iterable[str]]) -> List[str]:
     return [_clip(i, 500) for i in list(items or [])[:MAX_LIST]]
+
+
+def _rel_list(items: Optional[Iterable[str]]) -> List[str]:
+    """Paths relative to the project: hooks record relative paths, so absolute ones must match."""
+    root = os.path.abspath(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
+    out = []
+    for p in _clean_list(items):
+        if os.path.isabs(p):
+            ap = os.path.normpath(p)
+            if ap.startswith(root + os.sep):
+                p = os.path.relpath(ap, root)
+        out.append(p)
+    return out
 
 
 class Service:
@@ -88,12 +118,26 @@ class Service:
             }
 
     # -- tasks ------------------------------------------------------------
+    def _known_tasks(self, ids: Optional[Iterable[str]]) -> List[str]:
+        out = _clean_list(ids)
+        for i in out:
+            if tasks.get_task(self.store, i) is None:
+                raise ValueError("unknown task id: %s" % i)
+        return out
+
+    def _known_sources(self, ids: Optional[Iterable[str]]) -> List[str]:
+        out = _clean_list(ids)
+        for i in out:
+            if decisions.get_decision(self.store, i) is None and provenance.get_finding(self.store, i) is None:
+                raise ValueError("unknown decision or finding id: %s" % i)
+        return out
+
     def create_task(self, goal: str, depends_on: Optional[List[str]] = None,
                     touches: Optional[List[str]] = None) -> Dict[str, Any]:
         def go():
             if not str(goal).strip():
                 raise ValueError("goal is required")
-            t = tasks.create_task(self.store, _clip(goal, 500), _clean_list(depends_on), _clean_list(touches))
+            t = tasks.create_task(self.store, _clip(goal, 500), self._known_tasks(depends_on), _rel_list(touches))
             return {"task": t}
         return self._safe(go)
 
@@ -132,8 +176,8 @@ class Service:
             if not str(text).strip():
                 raise ValueError("text is required")
             d = decisions.post_decision(
-                self.store, self.actor(actor), _clip(text), _clean_list(artifacts),
-                _clean_list(based_on), kind=kind,
+                self.store, self.actor(actor), _clip(text), _rel_list(artifacts),
+                self._known_sources(based_on), kind=kind,
             )
             return {"decision": d}
         return self._safe(go)
@@ -142,7 +186,7 @@ class Service:
                         task_id: Optional[str] = None, actor: Optional[str] = None) -> Dict[str, Any]:
         def go():
             res = decisions.check_conflicts(
-                self.store, self.actor(actor), _clean_list(paths),
+                self.store, self.actor(actor), _rel_list(paths),
                 goal=_clip(goal, 500) if goal else None, task_id=task_id,
             )
             res["summary"] = decisions.describe_conflicts(res)

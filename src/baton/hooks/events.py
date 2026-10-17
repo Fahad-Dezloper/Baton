@@ -78,7 +78,12 @@ def context_output(event: str, text: str) -> Dict[str, Any]:
 
 
 def _warned_path(actor: str) -> str:
-    return os.path.join(tempfile.gettempdir(), "baton-warned-%s.json" % hashlib.sha1(actor.encode()).hexdigest()[:10])
+    d = os.path.join(tempfile.gettempdir(), "baton-%s" % (os.getuid() if hasattr(os, "getuid") else "user"))
+    try:
+        os.makedirs(d, mode=0o700, exist_ok=True)
+    except OSError:
+        pass
+    return os.path.join(d, "warned-%s.json" % hashlib.sha1(actor.encode()).hexdigest()[:10])
 
 
 def _already_warned(actor: str, signature: str) -> bool:
@@ -98,8 +103,10 @@ def _remember_warned(actor: str, signature: str) -> None:
         except (OSError, ValueError):
             seen = []
         seen = (seen + [signature])[-200:]
-        with open(path, "w") as f:
+        tmp = "%s.%d" % (path, os.getpid())
+        with open(tmp, "w") as f:
             json.dump(seen, f)
+        os.replace(tmp, path)
     except OSError:
         pass
 
@@ -211,10 +218,11 @@ def on_pre_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Optiona
     parts: List[str] = []
     if res["has_conflicts"]:
         parts.append("[baton] Possible collision on %s:\n%s\n"
-                     "Do not skip your task and do not overwrite their work: read the file as it is now, then "
-                     "make your change on top of it so both sets of changes survive. A live session on a "
-                     "file is not the same ticket as yours unless a 'same ticket' line says so. Record "
-                     "what you changed with post_decision so others can see it."
+                     "Their work is in progress and yours still needs doing. If your task needs something in this "
+                     "file (a function, a field), add it yourself; do not assume they will, and do not call "
+                     "code that does not exist yet. Re-read the file right before editing and keep their "
+                     "changes. A live session on a file is not the same ticket as yours unless a 'same "
+                     "ticket' line says so. Changes are recorded for you; no need to log them."
                      % (", ".join(paths), decisions.describe_conflicts(res, now=now)))
     if nearby:
         lines = ["- %s changed %s (%s): %s" % (str(c["author"])[:8], c["path"], c["kind"],

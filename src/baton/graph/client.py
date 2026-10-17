@@ -70,6 +70,9 @@ class Store:
             self._client = FalkorDB(
                 host=self._host,
                 port=self._port,
+                username=os.environ.get("BATON_FALKORDB_USERNAME") or None,
+                password=os.environ.get("BATON_FALKORDB_PASSWORD") or None,
+                ssl=os.environ.get("BATON_FALKORDB_SSL", "") in ("1", "true", "yes"),
                 socket_connect_timeout=float(os.environ.get("BATON_CONNECT_TIMEOUT", "2")),
                 socket_timeout=float(os.environ.get("BATON_QUERY_TIMEOUT", "5")),
             )

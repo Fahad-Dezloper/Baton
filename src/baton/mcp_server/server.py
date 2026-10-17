@@ -86,13 +86,13 @@ def build_server(service: Optional[Service] = None) -> MCPServer:
     def post_decision(text: str, artifacts: Optional[List[str]] = None,
                       based_on: Optional[List[str]] = None, kind: str = "note",
                       actor: Optional[str] = None) -> dict:
-        """Record a decision others should know about. kind: note|rename|interface|config|storage|other."""
+        """Rarely needed: edits, renames and interface/config/storage changes are recorded automatically. Use only for a design decision not visible in a diff. kind: note|rename|interface|config|storage|other."""
         return svc.post_decision(text, artifacts, based_on, kind, actor)
 
     @mcp.tool()
     def check_conflicts(paths: Optional[List[str]] = None, goal: Optional[str] = None,
                         task_id: Optional[str] = None, actor: Optional[str] = None) -> dict:
-        """Before editing `paths` (or starting `goal`): what open decisions, live leases or duplicate tickets collide?"""
+        """Rarely needed: every edit is checked automatically. Use to ask about files you have not touched yet, or a `goal` you are about to start."""
         return svc.check_conflicts(paths, goal, task_id, actor)
 
     @mcp.tool()
