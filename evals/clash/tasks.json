@@ -60,6 +60,30 @@
         "C": "Make shop.api.create_order raise ValueError, and create nothing, when items is empty or any item has qty <= 0.",
         "D": "Add shop.api.order_count() returning the number of stored orders."
       }
+    },
+    "L8": {
+      "name": "Held-out 2: function rename vs new callers of the old name (3 sessions)",
+      "agents": {
+        "A": "In shop/db.py rename the function get_order to load_order (same behaviour). Update every caller in the project, including shop/api.py and the files under tests/, so that nothing refers to get_order any more.",
+        "B": "Add shop/audit.py with order_total(order_id): it returns the total_cents of the stored order, or None when no such order exists. Read the order with shop.db.get_order(order_id).",
+        "C": "Add shop.api.order_exists(order_id) in shop/api.py: it returns True if an order with that id is stored, otherwise False. Read the order with db.get_order(order_id)."
+      }
+    },
+    "L9": {
+      "name": "Held-out 2: config key changes unit while two features read it (3 sessions)",
+      "agents": {
+        "A": "In shop/config.py replace the CONFIG key 'timeout_seconds' (value 30) with 'timeout_ms' (value 30000) and remove the old key. Update every place in the project that reads the old key so it keeps working.",
+        "B": "Add shop/client.py with get_timeout() returning the request timeout in seconds as a float. It must read the timeout from CONFIG in shop/config.py each time it is called (do not cache it at import time).",
+        "C": "Add shop/retry.py with retry_budget_seconds() returning the total time to spend on retries, in seconds, as a float: 3 times the request timeout, which is configured in CONFIG in shop/config.py. Read CONFIG each time the function is called (do not cache it at import time)."
+      }
+    },
+    "L10": {
+      "name": "Held-out 2: three sessions register entries in one shared registry file (3 sessions)",
+      "agents": {
+        "A": "shop/validators.py holds a module-level dict VALIDATORS mapping a name to a function(value) -> bool, and a function validate(kind, value) that returns VALIDATORS[kind](value) (an unknown kind raises KeyError). Add the validator 'sku' there: True only for a non-empty str made of lowercase letters and digits. Create the file if it does not exist yet.",
+        "B": "shop/validators.py holds a module-level dict VALIDATORS mapping a name to a function(value) -> bool, and a function validate(kind, value) that returns VALIDATORS[kind](value) (an unknown kind raises KeyError). Add the validator 'qty' there: True only for an int from 1 to 999 inclusive. Create the file if it does not exist yet.",
+        "C": "shop/validators.py holds a module-level dict VALIDATORS mapping a name to a function(value) -> bool, and a function validate(kind, value) that returns VALIDATORS[kind](value) (an unknown kind raises KeyError). Add the validator 'email' there: True only for a str that contains exactly one '@' and has a '.' somewhere after the '@'. Create the file if it does not exist yet."
+      }
     }
   }
 }

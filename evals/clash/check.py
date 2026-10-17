@@ -427,7 +427,147 @@ def L7(d, r):
     r.check("project_tests_pass", ok, "test_failure", tail)
 
 
-LEVELS = {"L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5, "L6": L6, "L7": L7}
+def L8(d, r):
+    """Rename of db.get_order vs two new callers that were written against the old name."""
+    a = snippet(
+        """
+        from shop import db
+        res['load_order_exists'] = callable(getattr(db, 'load_order', None))
+        res['get_order_gone'] = not hasattr(db, 'get_order')
+        """, d)
+    r.check("load_order_exists", a.get("load_order_exists"), "lost_update", str(a))
+    r.check("get_order_removed", a.get("get_order_gone"), "rename_incomplete", str(a))
+    b = snippet(
+        """
+        from shop import api
+        api.create_order('o1', [{'sku': 'a', 'price_cents': 250, 'qty': 2}])
+        res['fetch_works'] = (api.fetch_order('o1') or {}).get('total_cents') == 500
+        res['fetch_missing_none'] = api.fetch_order('zz') is None
+        """, d)
+    r.check("existing_api_still_works", b.get("fetch_works") and b.get("fetch_missing_none"), "broken_caller", str(b))
+    c = snippet(
+        """
+        from shop import api, audit
+        api.create_order('o1', [{'sku': 'a', 'price_cents': 250, 'qty': 2}])
+        res['total'] = audit.order_total('o1') == 500
+        res['missing'] = audit.order_total('zz') is None
+        """, d)
+    r.check("audit_order_total_works", c.get("total") and c.get("missing"), "contract_mismatch", str(c))
+    e = snippet(
+        """
+        from shop import api
+        api.create_order('o1', [{'sku': 'a', 'price_cents': 250, 'qty': 2}])
+        res['yes'] = api.order_exists('o1') is True
+        res['no'] = api.order_exists('zz') is False
+        """, d)
+    r.check("order_exists_works", e.get("yes") and e.get("no"), "contract_mismatch", str(e))
+    stale = []
+    for f in py_files(d, include_tests=True):
+        if os.path.basename(f) == "db.py":
+            continue
+        try:
+            if re.search(r"\bget_order\b", open(f).read()):
+                stale.append(os.path.relpath(f, d))
+        except Exception:
+            pass
+    r.notes["stale_get_order_files"] = stale
+    r.check("no_stale_get_order_refs", not stale, "stale_reference", "files still mention get_order: %s" % stale)
+    ok, n, tail = run_tests(d)
+    r.check("project_tests_pass", ok, "test_failure", tail)
+
+
+def L9(d, r):
+    """Config key 'timeout_seconds' becomes 'timeout_ms' while two features read the timeout."""
+    cfg = snippet(
+        """
+        from shop.config import CONFIG
+        res['new_key'] = CONFIG.get('timeout_ms') == 30000
+        res['old_key_gone'] = 'timeout_seconds' not in CONFIG
+        """, d)
+    r.check("config_has_timeout_ms", cfg.get("new_key"), "lost_update", str(cfg))
+    r.check("config_old_key_removed", cfg.get("old_key_gone"), "config_conflict", str(cfg))
+    probe = """
+        from shop.config import CONFIG
+        from shop import %(mod)s
+        res['default'] = %(mod)s.%(fn)s()
+        if 'timeout_ms' in CONFIG:
+            CONFIG['timeout_ms'] = 10000
+        else:
+            CONFIG['timeout_seconds'] = 10
+        res['changed'] = %(mod)s.%(fn)s()
+        """
+    for mod, fn, mult, name in (("client", "get_timeout", 1, "client_timeout_seconds"),
+                                ("retry", "retry_budget_seconds", 3, "retry_budget_seconds")):
+        out = snippet(probe % {"mod": mod, "fn": fn}, d)
+        ok = (not out.get("_error") and isinstance(out.get("default"), (int, float))
+              and isinstance(out.get("changed"), (int, float))
+              and abs(out["default"] - 30.0 * mult) < 1e-9 and abs(out["changed"] - 10.0 * mult) < 1e-9)
+        r.check(name, ok, "contract_mismatch", str(out))
+    ok, n, tail = run_tests(d)
+    r.check("project_tests_pass", ok, "test_failure", tail)
+
+
+def L10(d, r):
+    """Three sessions each register one validator in the same registry module."""
+    res = snippet(
+        """
+        from shop import validators as v
+        res['registry_is_dict'] = isinstance(getattr(v, 'VALIDATORS', None), dict)
+        res['keys'] = sorted(v.VALIDATORS) if res['registry_is_dict'] else None
+        res['validate_callable'] = callable(getattr(v, 'validate', None))
+        """, d)
+    if "_error" in res:
+        r.check("validators_module_imports", False, "integration_break", res["_error"])
+        return
+    r.check("registry_and_validate_present", res.get("registry_is_dict") and res.get("validate_callable"),
+            "contract_mismatch", str(res))
+    cases = {
+        "sku": ([("abc123", True), ("a1", True), ("ABC", False), ("", False), ("a-b", False), ("a b", False)], "sku"),
+        "qty": ([(1, True), (999, True), (5, True), (0, False), (1000, False), (-3, False)], "qty"),
+        "email": ([("a@b.co", True), ("ab.co", False), ("a@b", False), ("a@@b.co", False), ("a.b@c", False), ("a@b.c@d", False)], "email"),
+    }
+    for kind, (pairs, _) in cases.items():
+        out = snippet(
+            """
+            from shop import validators as v
+            res['registered'] = 'KIND' in getattr(v, 'VALIDATORS', {})
+            got = []
+            for value, want in PAIRS:
+                try:
+                    got.append(v.validate('KIND', value) is want)
+                except BaseException as e:
+                    got.append(False)
+            res['all_correct'] = all(got)
+            res['got'] = got
+            """.replace("KIND", kind).replace("PAIRS", repr(pairs)), d)
+        r.check("validator_%s_registered" % kind, out.get("registered"), "lost_update", str(out))
+        r.check("validator_%s_correct" % kind, out.get("all_correct"), "contract_mismatch", str(out))
+    unk = snippet(
+        """
+        from shop import validators as v
+        try:
+            v.validate('no-such-kind', 'x')
+            res['raises'] = False
+        except KeyError:
+            res['raises'] = True
+        except BaseException:
+            res['raises'] = False
+        """, d)
+    r.check("unknown_kind_raises_keyerror", unk.get("raises"), "contract_mismatch", str(unk))
+    defs = []
+    for f in py_files(d):
+        try:
+            if re.search(r"^VALIDATORS\s*(:[^=\n]+)?=", open(f).read(), re.M):
+                defs.append(os.path.relpath(f, d))
+        except Exception:
+            pass
+    r.notes["registry_definitions"] = defs
+    r.check("single_registry", len(defs) <= 1, "duplicate_work", "VALIDATORS defined in: %s" % defs)
+    ok, n, tail = run_tests(d)
+    r.check("project_tests_pass", ok, "test_failure", tail)
+
+
+LEVELS = {"L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5, "L6": L6, "L7": L7, "L8": L8, "L9": L9, "L10": L10}
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or sys.argv[1] not in LEVELS:
