@@ -54,4 +54,70 @@ subscription token, one trial at a time. Prefix `eval4`.
 
 ---
 ## Results
-(to be filled in)
+Run 2026-10-17, 13:20-13:45 IST, prefix `eval4`, 42 trials, 126 sessions, 0 infrastructure failures
+(no trial was re-run), 0 plugin hook errors. Nothing was dropped or re-run.
+
+| Level | Baseline clean | Plugin v3 clean | Failed checks / trial (base / plugin) | Fisher p (two-sided) |
+|---|---|---|---|---|
+| L8 rename vs old-name callers | 7/7 | 7/7 | 0.00 / 0.00 | 1.00 |
+| L9 config key + unit change | 4/7 | 7/7 | 0.57 / 0.00 | 0.19 |
+| L10 shared registry file | 4/7 | 6/7 | 0.86 / 0.29 | 0.56 |
+| **Pooled** | **15/21 (71%)** | **20/21 (95%)** | **0.48 / 0.10** | **0.093** |
+
+Failed checks per trial, pooled: permutation test (100k shuffles) two-sided p = 0.108.
+Baseline failures were `contract_mismatch` x7 (L9: features read the removed `timeout_seconds`
+key, KeyError; L10: registry/validator contract) and `lost_update` x3; plugin: one of each.
+
+## Reading, by the pre-stated rule
+- Neither primary metric reaches p < 0.05, so the pre-stated conclusion is **no detectable effect**.
+- The direction favours the plugin on both metrics (95% vs 71% clean; 0.10 vs 0.48 failed checks),
+  and on every level that had room (L8 is a ceiling: both arms 7/7, so it carries no information).
+  With 21 trials per arm this is suggestive, not established: p = 0.09 and 0.11, three levels
+  examined, one model, one fixture, tickets and checkers by one author.
+- This is the first evidence not tuned on, and it points the same way as round 3's post-hoc
+  failed-check reduction. It is consistent with a modest real benefit on config/registry-type
+  collisions, but does not confirm it.
+- Per-level tests are exploratory (uncorrected, n = 7).
+
+## Abstention (sessions that changed no file)
+Computed from session transcripts (`evals/harbor/abstention.py`): a session counts as writing if it
+made a non-erroring Write/Edit/MultiEdit call or a Bash command that looks like a file mutation.
+Heuristic; Bash false positives would undercount abstention.
+
+| Data | Sessions abstaining outside L5 |
+|---|---|
+| Baseline L1-L4 (round 1) | 0/60 |
+| Baseline L6, L7 (rounds 2-3) | 0/50 |
+| Plugin v1 L1-L4 | 3/60 (5.0%) |
+| Plugin v2 L1-L4, L6, L7 | 4/95 (4.2%) |
+| Plugin v3 L1-L4, L6, L7 | 1/94 (1.1%; 1 transcript missing) |
+| eval4 baseline L8-L10 | 0/63 |
+| eval4 plugin v3 L8-L10 | 0/63 |
+
+On L5 (duplicate tickets, standing down is designed) abstention is baseline 3/30, v1 10/30, v2 13/30,
+v3 15/30. So v3's wording change did remove nearly all unwanted abstention outside L5 (the earlier
+"about 6% vs 7%" text count overstated the baseline; transcripts show baseline 0%), and it is 0 in
+the held-out set.
+
+## The L2 regression (v3 3/5 vs baseline 5/5): a warning-induced mistake, not noise
+Both failing trials (DKS5JaG, w938K6B) have the same cause: session B (CSV export) learned that
+session A held a live lease on `shop/db.py` and that storage was being changed, and then chose not to
+edit `db.py`. It wrote `shop/export.py` calling a `db.list_orders()` that nobody added, and its own
+reply says so ("I did not touch db.py ... will fail until the other session adds it"). In all 5
+baseline trials B edited `db.py` itself. The 3 clean v3 trials are ones where B did edit `db.py`.
+Round 2 had one analogous failure (`all_orders`). So the lease message still induces deference to the
+file's owner even after the v3 wording change; reported only, not fixed.
+
+## Conclusion
+On three fresh levels the plugin was clean in 20/21 trials against 15/21 for the baseline, but this
+is not statistically significant (p = 0.09; failed checks p = 0.11), and one level was a ceiling.
+The honest statement: **no significant difference; direction favourable, consistent with round 3's
+post-hoc trend; unconfirmed.** Unwanted abstention outside L5 is now about 0-1%. A known cost
+remains: lease-induced deference on shared files (L2), which a clean-run table on L8-L10 does not
+exercise (each ticket there had an explicit target file). A confirmation would need roughly 40+
+trials per arm on further new levels.
+
+## Limits
+n = 7 per cell; one model (haiku); one fixture; author wrote tickets and checkers (validated before
+running, but L8 turned out too easy for both arms); only one session per level collides on any one
+file, so L10 is the only same-file test; abstention is a heuristic.
