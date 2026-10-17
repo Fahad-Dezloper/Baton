@@ -16,6 +16,7 @@ class Config:
     policy: str = "warn"          # warn: inject context | ask: prompt the user | deny: block the call
     lease_seconds: int = 900
     capture: bool = True          # derive decisions from edits automatically
+    stop_check: bool = True       # at the end of a session, ask for one integration re-check when others edited its files
 
 
 def load_config(project_dir: Optional[str]) -> Config:
@@ -30,12 +31,15 @@ def load_config(project_dir: Optional[str]) -> Config:
                 cfg.policy = str(raw.get("policy", cfg.policy))
                 cfg.lease_seconds = int(raw.get("lease_seconds", cfg.lease_seconds))
                 cfg.capture = bool(raw.get("capture", cfg.capture))
+                cfg.stop_check = bool(raw.get("stop_check", cfg.stop_check))
         except (OSError, ValueError):
             pass
     if os.environ.get("BATON_DISABLED", "").lower() in ("1", "true", "yes"):
         cfg.enabled = False
     if os.environ.get("BATON_CAPTURE", "").lower() in ("0", "false", "no"):
         cfg.capture = False
+    if os.environ.get("BATON_STOP_CHECK", "").lower() in ("0", "false", "no"):
+        cfg.stop_check = False
     cfg.policy = os.environ.get("BATON_POLICY", cfg.policy)
     if os.environ.get("BATON_LEASE_SECONDS", "").isdigit():
         cfg.lease_seconds = int(os.environ["BATON_LEASE_SECONDS"])

@@ -18,7 +18,7 @@ claude --plugin-dir /path/to/baton/plugin
 ```
 
 The plugin launchers find the repo's `.venv` on their own. If that fails, hooks stay silent (they
-never block a session) and the MCP tools report an error; run `baton doctor` to see why.
+never block a session); run `baton doctor` to see why.
 
 ## Troubleshooting
 

@@ -105,6 +105,17 @@ def designated_session(store: Store, actor: str, dups: List[dict]) -> bool:
     return all(my_key <= o for o in others)
 
 
+def overlapping_edits(store: Store, actor: str) -> List[dict]:
+    """Other sessions that edited files this session edited, while this session was running."""
+    rows = store.rows(
+        "MATCH (me:Task {id: $me})-[:TOUCHES]->(a:Artifact)<-[:TOUCHES]-(o:Task) "
+        "WHERE o.id <> $me AND o.session = true AND coalesce(o.last_edit_at, 0) >= me.created_at "
+        "RETURN o.owner, o.goal, collect(DISTINCT a.path) ORDER BY o.owner",
+        {"me": session_task_id(actor)}, read_only=True,
+    )
+    return [{"owner": r[0], "goal": r[1], "paths": r[2]} for r in rows]
+
+
 def end_session(store: Store, actor: str, now: Optional[float] = None) -> None:
     store.query(
         "MATCH (t:Task {id: $id}) SET t.status = 'done', t.lease_until = 0, t.done_at = $now",

@@ -72,3 +72,45 @@ class WarningTextTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StopCheckTests(GraphCase):
+    def setUp(self):
+        self._old = os.environ.pop("CLAUDE_PROJECT_DIR", None)
+
+    def tearDown(self):
+        if self._old is not None:
+            os.environ["CLAUDE_PROJECT_DIR"] = self._old
+
+    def _edit(self, who, path, now):
+        from baton.hooks.config import Config
+        project = tempfile.mkdtemp()
+        os.makedirs(os.path.join(project, os.path.dirname(path)), exist_ok=True)
+        open(os.path.join(project, path), "w").write("x = 1\n")
+        events.on_post_tool(self.store, {"session_id": who, "cwd": project, "tool_name": "Edit",
+                                         "tool_input": {"file_path": os.path.join(project, path)},
+                                         "tool_response": {}}, Config(), now=now)
+
+    def test_stop_asks_for_one_recheck_when_others_edited_the_same_file(self):
+        from baton.hooks.config import Config
+        a, b = "sa-" + uuid.uuid4().hex[:6], "sb-" + uuid.uuid4().hex[:6]
+        sessions.begin_session(self.store, a, now=100)
+        sessions.begin_session(self.store, b, now=101)
+        self._edit(a, "shop/api.py", 110)
+        self._edit(b, "shop/api.py", 120)
+        out = events.on_stop(self.store, {"session_id": a, "last_assistant_message": "done"}, Config(), now=130)
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("shop/api.py", out["reason"])
+        again = events.on_stop(self.store, {"session_id": a, "stop_hook_active": True}, Config(), now=140)
+        self.assertIsNone(again)
+        self.assertIsNone(events.on_stop(self.store, {"session_id": a}, Config(), now=150))
+
+    def test_no_check_when_no_overlap_or_disabled(self):
+        from baton.hooks.config import Config
+        a = "sc-" + uuid.uuid4().hex[:6]
+        sessions.begin_session(self.store, a, now=100)
+        self._edit(a, "solo.py", 110)
+        self.assertIsNone(events.on_stop(self.store, {"session_id": a}, Config(), now=120))
+        cfg = Config()
+        cfg.stop_check = False
+        self.assertIsNone(events.on_stop(self.store, {"session_id": a}, cfg, now=130))

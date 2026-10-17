@@ -38,6 +38,7 @@ for level in $LEVELS; do
     case "$arm" in
       baseline) agent="baton_eval.agent:BatonClashBaseline" ;;
       plugin)   agent="baton_eval.agent:BatonClashPlugin" ;;
+      full)     agent="baton_eval.agent:BatonClashPluginFull" ;;
       *) echo "unknown arm: $arm"; exit 1 ;;
     esac
     job="${PREFIX}-${arm}-${lvl}-k${K}"

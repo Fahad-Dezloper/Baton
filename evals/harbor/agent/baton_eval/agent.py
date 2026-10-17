@@ -28,7 +28,8 @@ from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 
 PROJECT = "/app/project"
-PLUGIN_DIR = "/opt/baton/plugin"
+PLUGIN_DIR = "/opt/baton/plugin"             # hooks only (the default product)
+PLUGIN_DIR_FULL = "/opt/baton/plugin-full"   # hooks plus the MCP server
 FALKORDB_SO = "/var/lib/falkordb/bin/falkordb.so"
 DEFAULT_MODEL = "claude-haiku-5-5"
 
@@ -56,6 +57,7 @@ def parse_tickets(instruction: str) -> Dict[str, Any]:
 
 class _ClashAgent(ClaudeCode):
     ARM = "baseline"
+    MCP = False
 
     @staticmethod
     def name() -> str:  # type: ignore[override]
@@ -125,7 +127,9 @@ class _ClashAgent(ClaudeCode):
                  "--permission-mode", "acceptEdits",
                  "--allowedTools", "Write", "Edit", "MultiEdit", "Bash"]
         if plugin:
-            flags += ["mcp__plugin_baton_baton__*", "--plugin-dir", PLUGIN_DIR]
+            if self.MCP:
+                flags += ["mcp__plugin_baton_baton__*"]
+            flags += ["--plugin-dir", PLUGIN_DIR_FULL if self.MCP else PLUGIN_DIR]
         flag_str = " ".join(shlex.quote(f) for f in flags)
         out = f"{logs}/worker-{key}.json"
         err = f"{logs}/worker-{key}.err"
@@ -220,4 +224,12 @@ class BatonClashBaseline(_ClashAgent):
 
 
 class BatonClashPlugin(_ClashAgent):
+    """Hooks only: the default product."""
     ARM = "plugin"
+    MCP = False
+
+
+class BatonClashPluginFull(_ClashAgent):
+    """Hooks plus the MCP tools (what rounds 1-3 and the 'eval5' run measured)."""
+    ARM = "plugin"
+    MCP = True

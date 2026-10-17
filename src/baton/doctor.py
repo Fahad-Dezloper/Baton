@@ -15,7 +15,7 @@ MIN_PYTHON = (3, 10)
 PLUGIN_FILES = (
     ".claude-plugin/plugin.json",
     "hooks/hooks.json",
-    ".mcp.json",
+    "optional-mcp.json",
     "bin/baton-hook",
     "bin/baton-mcp",
 )

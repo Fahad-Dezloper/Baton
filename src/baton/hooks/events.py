@@ -16,6 +16,7 @@ from baton.capture import derive, transcript
 from baton.core import decisions, sessions
 from baton.core.paths import normalize_path
 from baton.core.safety import scrub
+from baton.core.tasks import clip_goal
 from baton.graph.client import Store
 from baton.hooks.config import Config
 
@@ -294,6 +295,18 @@ def on_stop(store: Store, payload: Dict[str, Any], cfg: Config, now: Optional[fl
     note = " ".join(str(payload.get("last_assistant_message", "")).split())
     sessions.export_session_handoff(store, actor, note=note, now=now,
                                     verification=_verification(payload) if cfg.capture else "")
+    if cfg.stop_check and not payload.get("stop_hook_active"):
+        ov = sessions.overlapping_edits(store, actor)
+        signature = "stop|" + ",".join("%s:%s" % (o["owner"], ",".join(o["paths"])) for o in ov)
+        if ov and not _already_warned(actor, signature):
+            _remember_warned(actor, signature)
+            files = sorted({p for o in ov for p in o["paths"]})
+            who = "; ".join("%s (%s)" % (str(o["owner"])[:8], scrub(clip_goal(o["goal"], 90), 90)) for o in ov[:3])
+            return {"decision": "block", "reason": (
+                "[baton] Before you finish: other sessions also edited files you edited (%s) while you "
+                "worked: %s. Re-read those files as they are now and run the project tests. Fix any "
+                "mismatch between your change and theirs (the same logic added twice, a changed "
+                "return shape or signature, a lost edit), then finish." % (", ".join(files[:6]), who))}
     return None
 
 

@@ -18,7 +18,8 @@ COPY src /opt/baton/src
 COPY plugin /opt/baton/plugin
 RUN python3 -m venv /opt/baton/.venv \
  && /opt/baton/.venv/bin/pip install --no-cache-dir falkordb "mcp>=2,<3" \
- && chmod +x /opt/baton/plugin/bin/*
+ && chmod +x /opt/baton/plugin/bin/* \
+ && cp -r /opt/baton/plugin /opt/baton/plugin-full && cp /opt/baton/plugin/optional-mcp.json /opt/baton/plugin-full/.mcp.json
 
 # The shared codebase every trial starts from, and the scorer.
 COPY evals/clash/fixture /app/project

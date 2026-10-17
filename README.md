@@ -9,7 +9,7 @@ another builds on the old one, two sessions pick different storage engines, thre
 implement the same ticket. And when a session ends, the next one starts from zero.
 
 baton keeps a graph of **who is working on what, what has been decided, and what each decision was
-based on**. It installs as a Claude Code plugin (hooks + MCP server): sessions are warned before
+based on**. It installs as a Claude Code plugin (hooks only by default; an MCP server is optional): sessions are warned before
 they step on each other, decisions are captured from edits with no commands typed, and a handoff
 is written when a session stops.
 
@@ -100,8 +100,14 @@ against other sessions' work; file changes and renames are recorded; interface, 
 dependency changes become decisions on their own (derived deterministically from the edit payload,
 no model call); a handoff with the last test result is written when the session stops.
 
-MCP tools (13): create_task, get_ready_tasks, claim_task, renew_lease, complete_task, release_task,
-post_decision, check_conflicts, add_finding, why, retract, handoff_export, handoff_import.
+**Hooks-only by default, on purpose.** Everything above is automatic. Adding the MCP tools made
+sessions call them redundantly (about 1.4 extra tool calls per session) and cost 9-37% more tokens
+([measurement](docs/RESULTS-TOKENS.md)). Optional MCP tools for explicit use (13: create_task,
+get_ready_tasks, claim_task, renew_lease, complete_task, release_task, post_decision, check_conflicts,
+add_finding, why, retract, handoff_export, handoff_import):
+```sh
+claude mcp add baton -- /path/to/baton/plugin/bin/baton-mcp
+```
 
 Settings (`.baton.json` in the project, or environment): `policy` = `warn` (default) | `ask` |
 `deny`; `enabled`; `lease_seconds`; `capture`. `BATON_DISABLED=1` turns it off. **Fails open:** if the
@@ -148,7 +154,7 @@ Limits: small samples, one model, one fixture project, tasks and scorer written 
 ## Layout
 ```
 src/baton/        core library, MCP server, hook entry points
-plugin/           Claude Code plugin (manifest, hooks, MCP config)
+plugin/           Claude Code plugin (manifest, hooks; optional-mcp.json for the MCP server)
 demo/             scripted scenario and Browser queries
 evals/clash/      collision tasks, fixture project and checker
 evals/harbor/     containerised runner for the evaluation
