@@ -6,7 +6,7 @@ import time
 from typing import Dict, Iterable, List, Optional
 
 from baton.core.paths import normalize_paths
-from baton.core.tasks import _now, goal_key
+from baton.core.tasks import _now, clip_goal, goal_key
 from baton.graph import queries
 from baton.graph.client import Store, new_id
 
@@ -244,7 +244,7 @@ def describe_conflicts(result: Dict[str, object], now: Optional[float] = None) -
         when = ""
         if t.get("last_edit_at"):
             when = ", last edit %s" % _age(now - t["last_edit_at"])
-        lines.append("- %s is working on '%s' touching %s%s" % (who, str(t["goal"])[:120], ", ".join(t["paths"]), when))
+        lines.append("- %s is working on '%s' touching %s%s" % (who, clip_goal(t["goal"], 160), ", ".join(t["paths"]), when))
     for t in result["duplicates"]:  # type: ignore[union-attr]
-        lines.append("- same ticket already %s by %s: %s" % (t["status"], t.get("owner") or "nobody", t["goal"]))
+        lines.append("- same ticket already %s by %s: %s" % (t["status"], t.get("owner") or "nobody", clip_goal(t["goal"], 160)))
     return "\n".join(lines)

@@ -121,5 +121,15 @@ class NearbyChangesTests(GraphCase):
         self.assertEqual(ctx.count("create_order gains client_id"), 1)
 
 
+class ClipGoalTests(unittest.TestCase):
+    def test_keeps_the_end_of_a_long_goal(self):
+        from baton.core.tasks import clip_goal
+        text = "Shared preamble. " * 30 + "Ticket B: add stock reservation."
+        out = clip_goal(text, 160)
+        self.assertLessEqual(len(out), 160)
+        self.assertTrue(out.endswith("add stock reservation."))
+        self.assertEqual(clip_goal("short", 160), "short")
+
+
 if __name__ == "__main__":
     unittest.main()

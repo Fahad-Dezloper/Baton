@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 from baton.core import handoff
 from baton.core.decisions import ensure_actor
 from baton.core.paths import normalize_path
-from baton.core.tasks import _now, goal_key
+from baton.core.tasks import _now, clip_goal, goal_key
 from baton.graph.client import Store
 
 SESSION_LEASE_SECONDS = 900
@@ -65,7 +65,7 @@ def set_goal(store: Store, actor: str, prompt: str, now: Optional[float] = None)
     full = " ".join(prompt.split())
     if not full:
         return None
-    goal = full[:200]
+    goal = full[:600]
     begin_session(store, actor, now=now)
     rows = store.rows(
         "MATCH (t:Task {id: $id}) WHERE t.auto_goal = true "
@@ -138,7 +138,7 @@ def briefing(store: Store, actor: str, now: Optional[float] = None,
     if live:
         parts.append("Other sessions working now:")
         for task, paths in live:
-            parts.append("- %s: %s%s" % (str(task["owner"])[:13], str(task["goal"])[:140],
+            parts.append("- %s: %s%s" % (str(task["owner"])[:13], clip_goal(task["goal"], 160),
                                          " (touching %s)" % ", ".join(paths) if paths else ""))
 
     decs = store.rows(

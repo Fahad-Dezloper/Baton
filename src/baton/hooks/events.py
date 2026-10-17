@@ -210,7 +210,9 @@ def on_pre_tool(store: Store, payload: Dict[str, Any], cfg: Config, now: Optiona
     parts: List[str] = []
     if res["has_conflicts"]:
         parts.append("[baton] Possible collision on %s:\n%s\n"
-                     "Check what the other work is doing before overwriting it. If you go ahead, record "
+                     "Do not skip your task and do not overwrite their work: read the file as it is now, then "
+                     "make your change on top of it so both sets of changes survive. A live session on a "
+                     "file is not the same ticket as yours unless a 'same ticket' line says so. Record "
                      "what you changed with post_decision so others can see it."
                      % (", ".join(paths), decisions.describe_conflicts(res, now=now)))
     if nearby:

@@ -15,6 +15,15 @@ from baton.graph.client import Store, new_id
 LEASE_SECONDS_DEFAULT = 300
 
 
+def clip_goal(text: str, n: int) -> str:
+    """Shorten for display keeping the start and the end: shared preambles hide the ticket text at the start."""
+    text = " ".join(str(text).split())
+    if len(text) <= n:
+        return text
+    head = n // 3
+    return text[:head] + " ... " + text[-(n - head - 5):]
+
+
 def goal_key(goal: str) -> str:
     """Normalized goal text used to spot duplicate tickets.
 
