@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
-# Launcher for the baton MCP server (stdio). Mirrors baton-hook's interpreter discovery.
+# Launcher for the baton MCP server (stdio). Same interpreter discovery as baton-hook.
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SRC="$ROOT/../src"
+[ -d "$SRC/baton" ] && export PYTHONPATH="$SRC${PYTHONPATH:+:$PYTHONPATH}"
 
+# Interpreter discovery, in order: $BATON_PYTHON, the repo's .venv (made by the quickstart),
+# the interpreter named by the `baton` console script on PATH, then any python3/python that can
+# import baton and falkordb. Nothing to edit for the documented install.
 pick_python() {
-  local c
-  for c in "${BATON_PYTHON:-}" "$ROOT/../.venv/bin/python" "$ROOT/.venv/bin/python" python3; do
-    [ -n "$c" ] && command -v "$c" >/dev/null 2>&1 && "$c" -c 'import baton' >/dev/null 2>&1 && { echo "$c"; return 0; }
+  local c b
+  for c in "${BATON_PYTHON:-}" "$ROOT/../.venv/bin/python" "$ROOT/.venv/bin/python"; do
+    [ -n "$c" ] && [ -x "$c" ] && { echo "$c"; return 0; }
   done
-  if [ -d "$ROOT/../src/baton" ]; then
-    for c in "$ROOT/../.venv/bin/python" python3; do
-      command -v "$c" >/dev/null 2>&1 && { echo "$c"; return 0; }
-    done
-  fi
+  b="$(command -v baton 2>/dev/null)" && [ -n "$b" ] && {
+    c="$(head -n1 "$b" 2>/dev/null | sed -n 's/^#!//p' | awk '{print $1}')"
+    [ -n "$c" ] && [ -x "$c" ] && { echo "$c"; return 0; }
+  }
+  for c in python3 python; do
+    command -v "$c" >/dev/null 2>&1 && "$c" -c 'import baton, falkordb' >/dev/null 2>&1 && { echo "$c"; return 0; }
+  done
   return 1
 }
 
-PY="$(pick_python)" || { echo "baton: no Python with baton installed (set BATON_PYTHON)" >&2; exit 1; }
-[ -d "$ROOT/../src/baton" ] && export PYTHONPATH="$ROOT/../src${PYTHONPATH:+:$PYTHONPATH}"
+PY="$(pick_python)" || { echo "baton: no Python with baton installed. Run: python3 -m venv .venv && .venv/bin/pip install -e .  (or set BATON_PYTHON)" >&2; exit 1; }
 exec "$PY" -B -m baton.mcp_server.server

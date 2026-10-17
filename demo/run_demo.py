@@ -21,7 +21,7 @@ from baton.graph.client import Store  # noqa: E402
 from baton.hooks.config import Config  # noqa: E402
 from baton.hooks.events import HANDLERS  # noqa: E402
 
-WORKSPACE = "demo"
+WORKSPACE = os.environ.get("BATON_DEMO_WORKSPACE", "demo")
 A, B, C = "sess-A-storage", "sess-B-endpoint", "sess-C-next-day"
 
 

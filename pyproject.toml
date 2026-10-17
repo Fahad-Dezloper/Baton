@@ -17,7 +17,7 @@ dependencies = [
 dev = ["pytest"]
 
 [project.scripts]
-baton = "baton.hooks.cli:main"
+baton = "baton.cli:main"
 baton-mcp = "baton.mcp_server.server:main"
 
 [tool.setuptools.packages.find]
