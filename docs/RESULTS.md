@@ -178,3 +178,35 @@ fully collision-free."
 Same as round 2, plus: three rounds of tuning on the same L1-L5 tasks (overfitting risk), L6 edited
 after seeing results, no new fixture or model, n = 5 per cell.
 
+
+# Round 4: token cost, hooks-only default, end-of-session check
+
+Run: 2026-10-17, 15:13-17:10 IST. Details of the token measurements: [RESULTS-TOKENS.md](RESULTS-TOKENS.md).
+All variants were chosen after seeing earlier rounds, so every comparison here is post-hoc.
+
+## What was found and changed
+1. **Token cost.** Plugin v3 used 19% more output tokens, 37% more cache-read tokens and 23% more turns
+   than no plugin (56 trials each). Cause: models called the optional MCP tools redundantly
+   (105 `check_conflicts` and 84 `post_decision` calls in 125 sessions) although hooks already did both.
+2. **v4** (no "log it by hand" instruction, tools marked "rarely needed"): about half the overhead
+   removed (+9% output, +22% cache-read), 40/56 clean.
+3. **Hooks-only** (no MCP tools loaded; the shipped default): tokens and turns at parity with no plugin
+   (cache-read 1.00x, turns 0.99x, cost 1.04x), 41/56 clean vs 32/56 (Fisher p = 0.11), 19% cheaper per
+   clean result. L2 recovered (5/5) and L3 rose (5/5); L10 fell to 3/7.
+4. **End-of-session check (v5, opt-in):** when another session edited the same files while this one
+   worked, ask once for a re-read and a test run. It fired in 12 of 14 L4/L6 trials.
+   L4 3/7, L6 2/7 (no change vs hooks-only 3/5 and 2/5), L10 7/7 (hooks-only 3/7; p = 0.07), pooled
+   12/21 vs 8/17 (p not significant) at 8-20% more turns and cost on L4/L6. **Not enabled by default;**
+   `BATON_STOP_CHECK=1` or `"stop_check": true` turns it on. The L10 jump fits its mechanism (a lost
+   edit in a shared file) but is one level at n = 7.
+
+## Level 5 is not winnable by design
+Its ticket E requires the rate limiter's state to survive a process restart, and ticket F forbids disk
+I/O in the limiter. No run in any arm has been clean (0/5 everywhere); failed checks per trial
+(baseline 3.6) is the meaningful number there, not the clean rate.
+
+## Failure shapes that remain (L4, L6)
+Both are integration mismatches that only appear when both sessions have finished: two sessions each
+adding the same stock reservation (L6), and one session changing a returned dict's shape while another's
+tests expect the old shape (L4). Warnings before an edit cannot see work that has not been written yet.
+

@@ -98,12 +98,15 @@ class StopCheckTests(GraphCase):
         sessions.begin_session(self.store, b, now=101)
         self._edit(a, "shop/api.py", 110)
         self._edit(b, "shop/api.py", 120)
-        out = events.on_stop(self.store, {"session_id": a, "last_assistant_message": "done"}, Config(), now=130)
+        cfg = Config()
+        cfg.stop_check = True
+        out = events.on_stop(self.store, {"session_id": a, "last_assistant_message": "done"}, cfg, now=130)
         self.assertEqual(out["decision"], "block")
         self.assertIn("shop/api.py", out["reason"])
-        again = events.on_stop(self.store, {"session_id": a, "stop_hook_active": True}, Config(), now=140)
+        again = events.on_stop(self.store, {"session_id": a, "stop_hook_active": True}, cfg, now=140)
         self.assertIsNone(again)
-        self.assertIsNone(events.on_stop(self.store, {"session_id": a}, Config(), now=150))
+        self.assertIsNone(events.on_stop(self.store, {"session_id": a}, cfg, now=150))
+        self.assertIsNone(events.on_stop(self.store, {"session_id": "other"}, Config(), now=160))  # off by default
 
     def test_no_check_when_no_overlap_or_disabled(self):
         from baton.hooks.config import Config

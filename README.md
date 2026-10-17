@@ -113,7 +113,7 @@ Settings (`.baton.json` in the project, or environment): `policy` = `warn` (defa
 `deny`; `enabled`; `lease_seconds`; `capture`. `BATON_DISABLED=1` turns it off. **Fails open:** if the
 store is unreachable, hooks print nothing and never block the session. Each hook call takes roughly 0.1-0.15 s.
 
-Tests: `.venv/bin/python -B -m unittest discover -s tests -t .` (124 tests, run against a live FalkorDB v4.22.1; also passed on 6.0.2).
+Tests: `.venv/bin/python -B -m unittest discover -s tests -t .` (131 tests, run against a live FalkorDB v4.22.1; also passed on 6.0.2).
 
 ## Evaluation (honest summary)
 Parallel Claude Code sessions (cheap model) are started at the same moment on one shared checkout
@@ -145,6 +145,15 @@ Grep over a flat notes file matches that only when every note cites its source b
 quote (recall 0.65 with mixed citations, 0 with paraphrased ones). The graph is only as good as the
 recorded `based_on` links (recall 0.73 if 20% are missing). Handoffs keep tainted and interface
 decisions first; beyond ~50 decisions most notes are dropped by the size budget.
+
+**Token and time cost** ([docs/RESULTS-TOKENS.md](docs/RESULTS-TOKENS.md)). The first versions loaded
+optional MCP tools that models called redundantly: +37% cache-read tokens and +23% turns. The shipped
+default is now hooks-only. Over 56 trials per arm it matches no plugin on tokens and turns
+(cache-read 1.00x, turns 0.99x, cost 1.04x), with 41/56 clean runs against 32/56 (p = 0.11, not
+significant) and about 19% lower estimated cost per clean result. Per-session time is within 6%.
+These variants were chosen after seeing earlier rounds, so the comparison is post-hoc. An opt-in
+end-of-session re-check (`BATON_STOP_CHECK=1`) did not help L4 or L6 and costs extra turns; it
+helped L10 (7/7 vs 3/7, p = 0.07).
 
 The mechanism itself is verified: real warnings reach real concurrent sessions with nothing typed,
 with zero hook errors across the evaluation trials.
